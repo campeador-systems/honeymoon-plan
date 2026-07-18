@@ -163,6 +163,10 @@
   .hub-views{flex:1;min-height:0;position:relative;display:flex;overflow:hidden}
   .hub-pane{flex:0 0 100%;min-width:0;overflow-y:auto;padding:14px 16px 22px;transition:transform .28s ease}
   .hub-views.dsel .hub-pane{transform:translateX(-100%)}
+  @keyframes dayInR{from{transform:translateX(52px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes dayInL{from{transform:translateX(-52px);opacity:0}to{transform:none;opacity:1}}
+  .dd-wrap.anim-fwd{animation:dayInR .24s ease-out}
+  .dd-wrap.anim-back{animation:dayInL .24s ease-out}
   .pane-list{display:flex;flex-direction:column;gap:10px}
   .dcard{--tint:color-mix(in srgb,var(--c) 7%,var(--card));border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));
     border-left:4px solid var(--c);border-radius:11px;background:var(--card)}
@@ -665,10 +669,10 @@ const MOBILE=()=>window.matchMedia("(max-width:860px)").matches;
 function onDayClick(d){ if(MOBILE())showDay(d); else accordion(d); }
 
 /* mobile: slide-over sub-page */
-function showDay(d){
+function showDay(d,dir){
   hubSel=d;
   const pane=document.getElementById("hubDetail");
-  pane.innerHTML=detailHTML(d);
+  pane.innerHTML=`<div class="dd-wrap${dir>0?" anim-fwd":(dir<0?" anim-back":"")}">${detailHTML(d)}</div>`;
   document.getElementById("hubViews").classList.add("dsel");
   document.getElementById("hubBack").onclick=backToList;
   wireNotes(pane,d);
@@ -700,10 +704,10 @@ function navDay(dir){
   if(hubSel==null)return;
   const days=legDays(hubLeg),i=days.indexOf(hubSel);
   if(dir>0){
-    if(i<days.length-1)showDay(days[i+1]);
+    if(i<days.length-1)showDay(days[i+1],1);
     else{const ni=LEGSEQ.indexOf(hubLeg)+1;if(ni<LEGSEQ.length)openHub(LEGSEQ[ni],legDays(LEGSEQ[ni])[0]);}
   }else{
-    if(i>0)showDay(days[i-1]);
+    if(i>0)showDay(days[i-1],-1);
     else backToList();
   }
 }
