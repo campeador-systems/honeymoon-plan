@@ -137,12 +137,25 @@ async function runTool(name: string, input: any, db: ReturnType<typeof createCli
         };
       }
       case "resolve_link": {
-        const r = await fetch(input.url, { redirect: "follow" });
+        const r = await fetch(input.url, {
+          redirect: "follow",
+          headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" },
+        });
         const finalUrl = r.url;
-        const html = (await r.text()).slice(0, 20000);
-        const title = html.match(/<title[^>]*>([^<]{1,200})/i)?.[1] ?? null;
+        const html = (await r.text()).slice(0, 60000);
+        const mapsPlace = finalUrl.match(/\/maps\/place\/([^/@?]+)/)?.[1];
         const q = new URL(finalUrl).searchParams.get("q");
-        return { ok: true, final_url: finalUrl, place_hint: q ?? title };
+        const og = html.match(/property=["']og:title["'][^>]*content=["']([^"']{1,200})/i)?.[1] ??
+                   html.match(/content=["']([^"']{1,200})["'][^>]*property=["']og:title["']/i)?.[1];
+        const title = html.match(/<title[^>]*>([^<]{1,200})/i)?.[1];
+        const clean = (x: string | null | undefined) =>
+          x ? decodeURIComponent(String(x).replace(/\+/g, " ")).trim() : null;
+        const hint = clean(mapsPlace) ?? clean(q) ?? clean(og) ?? clean(title);
+        const useless = !hint || /^google/i.test(hint) || hint.length < 3;
+        return {
+          ok: true, final_url: finalUrl, place_hint: useless ? null : hint,
+          warning: useless ? "Could not extract a place name from this link — ask the user what the place is called. Do NOT guess." : undefined,
+        };
       }
       default:
         return { ok: false, error: `unknown tool ${name}` };
