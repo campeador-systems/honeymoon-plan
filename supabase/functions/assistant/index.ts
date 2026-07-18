@@ -154,6 +154,7 @@ async function runTool(name: string, input: any, db: ReturnType<typeof createCli
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  try {
 
   // 1) Caller must be one of the two logged-in travelers.
   const authed = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
@@ -196,4 +197,9 @@ Deno.serve(async (req) => {
     msgs = [...msgs, { role: "user", content: results }];
   }
   return json({ reply: "I hit my step limit — try that again in smaller pieces?", actions });
+
+  } catch (e) {
+    console.error("assistant error:", e);
+    return json({ error: "Assistant error: " + String((e as Error)?.message ?? e) }, 500);
+  }
 });
