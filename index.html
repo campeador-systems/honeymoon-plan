@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{color-scheme:light;
     --ink:#221b12;--ink-soft:#544a3d;--faint:#8f836e;
@@ -278,6 +279,37 @@
   #saveflash{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--teal);color:#fff;font-family:var(--sans);font-size:12px;padding:7px 16px;border-radius:20px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:70}
   #saveflash.show{opacity:1}
 
+  /* ---- Login ---- */
+  #loginScrim{z-index:90}
+  .login-card{background:var(--card);border-radius:14px;border-top:6px solid var(--teal);box-shadow:0 24px 60px rgba(30,20,10,.4);
+    padding:24px 24px 18px;width:min(380px,92vw);font-family:var(--sans)}
+  .login-title{font-family:var(--serif);font-style:italic;font-size:24px;font-weight:600;margin:4px 0 14px}
+  .login-step{display:flex;gap:8px;margin-bottom:10px}
+  .login-step input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-family:var(--sans);font-size:14px;background:#fffef9;color:var(--ink)}
+  .login-step input:focus{outline:none;border-color:var(--rule)}
+  .login-msg{font-size:11.5px;color:var(--faint);min-height:16px}
+  .login-who{display:flex;gap:10px;margin-bottom:12px}
+  .who-btn{flex:1;padding:14px 10px;border:1px solid var(--line);border-radius:10px;background:var(--chip);
+    font-family:var(--serif);font-style:italic;font-weight:600;font-size:19px;color:var(--ink);cursor:pointer;transition:all .12s}
+  .who-btn:hover{transform:translateY(-1px)}
+  .who-btn.act{background:var(--ink);color:#fffdf6;border-color:var(--ink)}
+
+  /* ---- Assistant chat ---- */
+  .chat-card{background:var(--card);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;height:min(72vh,660px);max-width:780px}
+  .chat-log{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .cb{max-width:86%;padding:9px 12px;border-radius:12px;font-family:var(--sans);font-size:13px;line-height:1.55;overflow-wrap:break-word}
+  .cb.me{align-self:flex-end;background:var(--ink);color:#fffdf6;border-bottom-right-radius:4px}
+  .cb.bot{align-self:flex-start;background:var(--chip);color:var(--ink);border-bottom-left-radius:4px}
+  .cb-imgs img{max-width:110px;max-height:110px;border-radius:8px;margin:2px 4px 4px 0}
+  .chat-pending{display:flex;gap:8px;padding:6px 12px 0;flex-wrap:wrap}
+  .cp-thumb{position:relative}
+  .cp-thumb img{height:44px;border-radius:6px;display:block}
+  .cp-thumb button{position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;border:none;background:var(--ink);color:#fff;font-size:11px;line-height:1;cursor:pointer;padding:0}
+  .chat-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);align-items:flex-end}
+  .chat-row textarea{flex:1;min-width:0;resize:none;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:var(--sans);font-size:13px;background:#fffef9;color:var(--ink);max-height:110px}
+  .chat-row textarea:focus{outline:none;border-color:var(--rule)}
+  .chat-attach{background:none;border:1px solid var(--line);border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:15px;flex:none}
+
   /* ---- FAB + views ---- */
   .fab-wrap{position:fixed;right:20px;bottom:20px;z-index:55;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
   .fab{width:52px;height:52px;border-radius:50%;background:var(--ink);color:#fffdf6;border:none;font-size:19px;cursor:pointer;
@@ -335,10 +367,25 @@
 
 </div>
 
+<div id="viewChat" style="display:none">
+  <div class="lbl">Trip assistant <span class="hint">screenshots, links, or words — activities &amp; restaurants only</span></div>
+  <div class="chat-card">
+    <div class="chat-log" id="chatLog"></div>
+    <div class="chat-pending" id="chatPending"></div>
+    <div class="chat-row">
+      <button class="chat-attach" id="chatAttach" title="Attach a screenshot">📎</button>
+      <input type="file" id="chatFile" accept="image/*" multiple style="display:none">
+      <textarea id="chatInput" rows="1" placeholder="e.g. add this to Tokyo… (paste screenshots right here)"></textarea>
+      <button class="pl-btn" id="chatSend">Send</button>
+    </div>
+  </div>
+</div>
+
 <div class="fab-wrap">
   <div class="fab-menu" id="fabMenu">
     <button data-view="dash">◧ Dashboard</button>
     <button data-view="links">⧉ Links</button>
+    <button data-view="chat">✨ Assistant</button>
   </div>
   <button class="fab" id="fabBtn" title="Menu">☰</button>
 </div>
@@ -370,6 +417,17 @@
     <button class="ct-add" id="ctAdd">+ Add expense</button>
   </div>
 </div></div>
+<div class="scrim" id="loginScrim"><div class="login-card">
+  <div class="m-eyebrow">The Honeymoon Planner</div>
+  <div class="login-title">Who's signing in?</div>
+  <div class="login-who">
+    <button class="who-btn" data-email="alejandro.rpc@icloud.com">Alejandro</button>
+    <button class="who-btn" data-email="hannahbrockstone@gmail.com">Hannah</button>
+  </div>
+  <div class="login-step" id="stepCode" style="display:none"><input id="loginCode" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code"><button class="pl-btn" id="loginVerify">Sign in</button></div>
+  <div class="login-msg" id="loginMsg"></div>
+</div></div>
+
 <div id="saveflash" class="sans">Saved ✓</div>
 
 <script>
@@ -575,16 +633,23 @@ const CITY={transit:{c:[37.6213,-122.379],z:11},hongkong:{c:[22.3193,114.1694],z
 const HOTELGEO={ // hotel pin coords — adjust here if off
   thailand:{name:"Banyan Tree Koh Samui",lat:9.47285,lng:100.06933},
 };
-// Curated day content (edited via chat with Claude). Items: {name, note?, lat?, lng?} — items with coords become map pins.
-const CONTENT={
-  17:{todo:[
-    {name:"Koh Tao diving day trip — Silent Divers",note:"Pickup 7:45 AM · boat to Koh Tao · 2 dives, lunch on board · back ~4 PM",ico:"🤿",lat:10.0922,lng:99.8395,url:"https://silentdivers.com/trips/dive-tour-koh-tao/"},
-  ]},
-  16:{todo:[
-    {name:"Samui Elephant Sanctuary — Morning Elephant Tour",note:"9:00 AM · Chaweng Noi · 2 adults",ico:"🐘",lat:9.5043,lng:100.0531,url:"https://share.google/tvKi7se1D8IRbeXno"},
-  ]},
-};
-const dayContent=d=>CONTENT[d]||{};
+/* ---- Shared trip items (Supabase) ---- */
+const SUPA_URL="https://kfjpagrtfcwqhofjlenz.supabase.co";
+const SUPA_KEY="sb_publishable_nUVh1Ds6iEiaEV5VOKx_Vw_rhEaoBzI";
+const sb=window.supabase?window.supabase.createClient(SUPA_URL,SUPA_KEY):null;
+let ITEMS=[];
+async function fetchItems(){
+  if(!sb)return;
+  const {data,error}=await sb.from("items").select("*");
+  if(!error&&Array.isArray(data))ITEMS=data;
+}
+const dayContent=d=>({todo:ITEMS.filter(x=>x.day===d&&x.kind==="todo"),eat:ITEMS.filter(x=>x.day===d&&x.kind==="eat")});
+function refreshOpenHubData(){
+  if(!scrim.classList.contains("open"))return;
+  buildMarkers();
+  if(hubFilter){document.getElementById("hubFilter").innerHTML=filterHTML(hubFilter);}
+  else if(hubSel!=null){const d=hubSel;hubSel=null;if(MOBILE())showDay(d);else accordion(d);}
+}
 // Travel-day itineraries (transfer times are ~estimates)
 const TRAVEL={
   11:[
@@ -657,7 +722,7 @@ function itemsHTML(arr,color){
   return arr.map((it,i)=>`<div class="pl-row"><span class="pl-num" style="background:${color}">${it.ico||i+1}</span>
     <div><div>${it.url?`<a class="it-link" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.name)} ↗</a>`:esc(it.name)}</div>${it.note?`<div class="it-sub">${esc(it.note)}</div>`:""}</div></div>`).join("");
 }
-const popHTML=(it,d)=>`${esc(it.name)} — Dec ${d}`+(it.url?`<br><a href="${esc(it.url)}" target="_blank" rel="noopener">Open in Google Maps ↗</a>`:"");
+const popHTML=it=>`${esc(it.name)}${it.day?" — Dec "+it.day:""}`+(it.url?`<br><a href="${esc(it.url)}" target="_blank" rel="noopener">Open in Google Maps ↗</a>`:"");
 
 function sectionsHTML(d){
   const info=PLAN.days[d], ct=dayContent(d);
@@ -753,16 +818,10 @@ function buildMarkers(){
   hubMarkers.forEach(x=>x.m.remove());hubMarkers=[];
   const hg=HOTELGEO[hubLeg];
   if(hg){const m=L.marker([hg.lat,hg.lng],{icon:mkPin("🏨",REGIONS[hubLeg].color),zIndexOffset:500}).addTo(hubMap).bindPopup(esc(hg.name));hubMarkers.push({day:null,m:m,label:"🏨",color:REGIONS[hubLeg].color,kind:null});}
-  legDays(hubLeg).forEach(d=>{
-    const ct=dayContent(d);
-    (ct.todo||[]).forEach((it,i)=>{if(it.lat==null)return;
-      const lb=it.ico||String(i+1);
-      const m=L.marker([it.lat,it.lng],{icon:mkPin(lb,TODO_C)}).addTo(hubMap).bindPopup(popHTML(it,d));
-      hubMarkers.push({day:d,m:m,label:lb,color:TODO_C,kind:"todo"});});
-    (ct.eat||[]).forEach((it,i)=>{if(it.lat==null)return;
-      const lb=it.ico||String(i+1);
-      const m=L.marker([it.lat,it.lng],{icon:mkPin(lb,EAT_C)}).addTo(hubMap).bindPopup(popHTML(it,d));
-      hubMarkers.push({day:d,m:m,label:lb,color:EAT_C,kind:"eat"});});
+  ITEMS.filter(x=>x.leg===hubLeg&&x.lat!=null).forEach(it=>{
+    const color=it.kind==="todo"?TODO_C:EAT_C, lb=it.ico||"•";
+    const m=L.marker([it.lat,it.lng],{icon:mkPin(lb,color)}).addTo(hubMap).bindPopup(popHTML(it));
+    hubMarkers.push({day:it.day,m:m,label:lb,color:color,kind:it.kind});
   });
   const pts=hubMarkers.map(x=>x.m.getLatLng());
   legBounds=pts.length>1?L.latLngBounds(pts).pad(0.25):null;
@@ -771,9 +830,9 @@ function buildMarkers(){
 function refreshPins(){
   if(hubFilter){
     hubMarkers.forEach(x=>{
-      const show=(x.day==null)||x.kind===hubFilter;
+      const show=(x.kind==null)||x.kind===hubFilter;
       x.m.setOpacity(show?1:0);
-      if(show){x.m.setIcon(mkPin(x.label,x.color));x.m.setZIndexOffset(x.day==null?500:400);}
+      if(show){x.m.setIcon(mkPin(x.label,x.color));x.m.setZIndexOffset(x.kind==null?500:400);}
     });
     return;
   }
@@ -781,9 +840,9 @@ function refreshPins(){
   hubMarkers.forEach(x=>{
     if(travelSel){x.m.setOpacity(0);return;}
     x.m.setOpacity(1);
-    const active=(x.day==null)||hubSel==null||x.day===hubSel;
+    const active=(x.kind==null)||hubSel==null||x.day===hubSel;
     x.m.setIcon(mkPin(x.label,active?x.color:GREY));
-    x.m.setZIndexOffset(x.day==null?500:(active?400:0));
+    x.m.setZIndexOffset(x.kind==null?500:(active?400:0));
   });
 }
 function clearArc(){if(hubArc){hubArc.forEach(l=>l.remove());hubArc=null;}}
@@ -859,12 +918,10 @@ function initHubMap(){
 /* leg-wide food / activity views */
 function filterHTML(kind){
   const color=kind==="todo"?TODO_C:EAT_C;
-  let rows="";
-  legDays(hubLeg).forEach(d=>{(dayContent(d)[kind]||[]).forEach((it,i)=>{
-    rows+=`<div class="pl-row"><span class="pl-num" style="background:${color}">${it.ico||i+1}</span>
+  const arr=ITEMS.filter(x=>x.leg===hubLeg&&x.kind===kind).sort((a,b)=>(a.day??99)-(b.day??99));
+  let rows=arr.map(it=>`<div class="pl-row"><span class="pl-num" style="background:${color}">${it.ico||"•"}</span>
       <div><div>${it.url?`<a class="it-link" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.name)} ↗</a>`:esc(it.name)}</div>
-      <div class="it-sub">Dec ${d}${it.note?" · "+esc(it.note):""}</div></div></div>`;
-  });});
+      <div class="it-sub">${it.day?"Dec "+it.day:"Any day"}${it.note?" · "+esc(it.note):""}</div></div></div>`).join("");
   if(!rows)rows=`<div class="dd-empty">No ${kind==="todo"?"activities":"restaurants"} saved for this leg yet — tell Claude and they show up.</div>`;
   return `<div class="dd-lbl">${kind==="todo"?"◎ All activities":"🍴 All restaurants"} · ${legName(hubLeg)}</div>${rows}`;
 }
@@ -965,11 +1022,100 @@ document.getElementById("fabBtn").onclick=()=>fabMenu.classList.toggle("open");
 function setView(v){
   document.getElementById("viewDash").style.display=(v==="dash")?"":"none";
   document.getElementById("viewLinks").style.display=(v==="links")?"":"none";
+  document.getElementById("viewChat").style.display=(v==="chat")?"":"none";
   fabMenu.querySelectorAll("button").forEach(x=>x.classList.toggle("act",x.dataset.view===v));
   fabMenu.classList.remove("open");
 }
 fabMenu.querySelectorAll("button").forEach(x=>x.onclick=()=>setView(x.dataset.view));
 document.addEventListener("click",e=>{if(!e.target.closest(".fab-wrap"))fabMenu.classList.remove("open");});
+
+/* ---- Auth (email code) ---- */
+const loginScrim=document.getElementById("loginScrim");
+async function initAuth(){
+  const msg=document.getElementById("loginMsg");
+  if(!sb){msg.textContent="Couldn't load the data library — check your connection.";loginScrim.classList.add("open");return;}
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){await fetchItems();return;}
+  loginScrim.classList.add("open");
+  sb.auth.onAuthStateChange(async(ev,sess)=>{if(sess){loginScrim.classList.remove("open");await fetchItems();}});
+}
+let LOGIN_EMAIL=null;
+document.querySelectorAll(".who-btn").forEach(b=>b.onclick=async()=>{
+  LOGIN_EMAIL=b.dataset.email;
+  document.querySelectorAll(".who-btn").forEach(x=>x.classList.toggle("act",x===b));
+  const msg=document.getElementById("loginMsg");
+  msg.textContent="Sending your code…";
+  const {error}=await sb.auth.signInWithOtp({email:LOGIN_EMAIL,options:{shouldCreateUser:false}});
+  if(error){msg.textContent=error.message;return;}
+  document.getElementById("stepCode").style.display="";
+  msg.textContent="Code emailed to "+LOGIN_EMAIL.replace(/^(...).*@/,"$1…@")+" — can take a minute.";
+  document.getElementById("loginCode").focus();
+});
+document.getElementById("loginVerify").onclick=async()=>{
+  const token=document.getElementById("loginCode").value.trim(),msg=document.getElementById("loginMsg");
+  if(!token||!LOGIN_EMAIL)return;
+  msg.textContent="Checking…";
+  const {error}=await sb.auth.verifyOtp({email:LOGIN_EMAIL,token:token,type:"email"});
+  if(error){msg.textContent="That code didn't work — try again or resend.";return;}
+  msg.textContent="";
+  loginScrim.classList.remove("open");
+  await fetchItems();
+};
+
+/* ---- Assistant chat ---- */
+let CHAT=[],PENDING=[];
+function chatBubble(cls,html){
+  const log=document.getElementById("chatLog");
+  const b=document.createElement("div");b.className="cb "+cls;b.innerHTML=html;
+  log.appendChild(b);log.scrollTop=log.scrollHeight;
+  return b;
+}
+function renderPending(){
+  document.getElementById("chatPending").innerHTML=PENDING.map((im,i)=>`<span class="cp-thumb"><img src="data:${im.media_type};base64,${im.data}"><button data-i="${i}" title="Remove">×</button></span>`).join("");
+  document.querySelectorAll("#chatPending button").forEach(b=>b.onclick=()=>{PENDING.splice(+b.dataset.i,1);renderPending();});
+}
+async function fileToImage(f){
+  const bmp=await createImageBitmap(f);
+  const max=1568,sc=Math.min(1,max/Math.max(bmp.width,bmp.height));
+  const cv=document.createElement("canvas");cv.width=Math.round(bmp.width*sc);cv.height=Math.round(bmp.height*sc);
+  cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
+  return {type:"base64",media_type:"image/jpeg",data:cv.toDataURL("image/jpeg",0.85).split(",")[1]};
+}
+async function addChatFiles(files){for(const f of files){if(f&&f.type.startsWith("image/"))PENDING.push(await fileToImage(f));}renderPending();}
+document.getElementById("chatAttach").onclick=()=>document.getElementById("chatFile").click();
+document.getElementById("chatFile").onchange=e=>{addChatFiles([...e.target.files]);e.target.value="";};
+document.getElementById("chatInput").addEventListener("paste",e=>{
+  const imgs=[...(e.clipboardData?e.clipboardData.items:[])].filter(x=>x.type.startsWith("image/")).map(x=>x.getAsFile());
+  if(imgs.length){e.preventDefault();addChatFiles(imgs);}
+});
+async function sendChat(){
+  const inp=document.getElementById("chatInput"),text=inp.value.trim();
+  if(!text&&!PENDING.length)return;
+  const content=[...PENDING.map(im=>({type:"image",source:im})),...(text?[{type:"text",text:text}]:[])];
+  chatBubble("me",(PENDING.length?`<div class="cb-imgs">${PENDING.map(im=>`<img src="data:${im.media_type};base64,${im.data}">`).join("")}</div>`:"")+(text?esc(text):""));
+  CHAT.push({role:"user",content:content});
+  PENDING=[];renderPending();inp.value="";
+  const typing=chatBubble("bot typing","…");
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session)throw new Error("You're signed out — reload the page.");
+    const r=await fetch(SUPA_URL+"/functions/v1/assistant",{method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token,"apikey":SUPA_KEY},
+      body:JSON.stringify({messages:CHAT.slice(-24)})});
+    const out=await r.json().catch(()=>({}));
+    typing.remove();
+    if(!r.ok)throw new Error(out.error||("The assistant hit an error (HTTP "+r.status+")."));
+    CHAT.push({role:"assistant",content:out.reply||""});
+    chatBubble("bot",esc(out.reply||"Done."));
+    if(out.actions&&out.actions.length){await fetchItems();refreshOpenHubData();showSaved();}
+  }catch(err){
+    typing.remove();
+    chatBubble("bot",'<span style="color:#9d174d">'+esc(String(err&&err.message?err.message:err))+"</span>");
+  }
+}
+document.getElementById("chatSend").onclick=sendChat;
+document.getElementById("chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}});
+chatBubble("bot","Hi! Send a screenshot or a Google Maps link (or just describe a place) and I'll add it to the trip — activities and restaurants, onto the right leg or day. I can also move or remove them. Anything else is for Alejandro to change.");
 
 /* ---- Boot ---- */
 document.getElementById("map").innerHTML=renderMap();
@@ -980,6 +1126,7 @@ renderAgenda();
 renderCostPanel();
 renderLinks();
 setView("dash");
+initAuth();
 </script>
 </body>
 </html>
