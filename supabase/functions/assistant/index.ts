@@ -4,7 +4,7 @@
 // Secrets required: ANTHROPIC_API_KEY (SUPABASE_URL / keys are injected automatically).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import Anthropic from "npm:@anthropic-ai/sdk@0.32.1";
+import Anthropic from "npm:@anthropic-ai/sdk";
 import { TRIP, CONVENTIONS } from "./context.ts";
 
 const CORS = {
@@ -185,13 +185,14 @@ Deno.serve(async (req) => {
   }
 
   const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY")! });
-  const system = CONVENTIONS + "\n" + TRIP;
+  // cache_control on the system block caches the whole static prefix (tools + system) at ~10% read price
+  const system = [{ type: "text" as const, text: CONVENTIONS + "\n" + TRIP, cache_control: { type: "ephemeral" as const } }];
   let msgs = messages;
   const actions: unknown[] = [];
 
-  for (let round = 0; round < 6; round++) {
+  for (let round = 0; round < 4; round++) {
     const resp = await anthropic.messages.create({
-      model: "claude-sonnet-5", max_tokens: 1200, system, tools: TOOLS, messages: msgs,
+      model: "claude-haiku-4-5-20251001", max_tokens: 700, system, tools: TOOLS, messages: msgs,
     });
     const toolUses = resp.content.filter((b) => b.type === "tool_use");
     if (toolUses.length === 0 || resp.stop_reason !== "tool_use") {
