@@ -379,14 +379,14 @@ const REGIONS={
   kyoto:{label:"Kyoto, Japan",color:"#9d174d"},
 };
 const PLAN={
-  stats:[["20","Days"],["4","Destinations"],["3","Countries"],["4","Flights"]],
+  stats:[["21","Days"],["4","Destinations"],["3","Countries"],["4","Flights"]],
   route:[["SFO","transit"],["Hong Kong","hongkong"],["Koh Samui","thailand"],["Tokyo","tokyo"],["Kyoto","kyoto"],["SFO","transit"]],
   expSeed:[
-    {desc:"United open-jaw ×2 — SFO→HKG (Dec 11) + KIX→SFO (Dec 30), $1,999 each", cat:"Flights", cash:3998, points:0, prog:""},
+    {desc:"United open-jaw ×2 — SFO→HKG (Dec 11) + KIX→SFO (Dec 31), $1,999 each", cat:"Flights", cash:3998, points:0, prog:""},
     {desc:"Banyan Tree Koh Samui — Ocean View Pool Villa, 6 nights (extend booking!)", cat:"Lodging", cash:0, points:330527, prog:"Chase UR"},
     {desc:"Bangkok Airways ×2 — Hong Kong → Koh Samui (Dec 14), $312 each", cat:"Flights", cash:624, points:0, prog:""},
     {desc:"PG122 + TG660 ×2 — Koh Samui → Bangkok → Tokyo (Dec 20), $477 each", cat:"Flights", cash:954, points:0, prog:""},
-    {desc:"Shinkansen ×2 — Tokyo → Kyoto (Dec 25), $83 each", cat:"Transport", cash:166, points:0, prog:""},
+    {desc:"Shinkansen ×2 — Tokyo → Kyoto (Dec 26), $83 each", cat:"Transport", cash:166, points:0, prog:""},
   ],
   days:{
     11:{leg:"transit",city:"Depart SFO",ico:"✈️",nights:"Evening departure · 11:15 PM",move:{mode:"plane",brand:"United",from:"transit",to:"hongkong"},seed:{transport:"United · SFO → Hong Kong (HKG). Departs 11:15 PM, nonstop 15h 30m. Lands 6:45 AM Dec 13 (+2 — date line).",stay:"Day at home; red-eye at night."}},
@@ -398,17 +398,18 @@ const PLAN={
     17:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 4 of 6",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
     18:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 5 of 6",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
     19:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 6 of 6",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
-    20:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 1 of 5",move:{mode:"plane",brand:"Bangkok Air → Thai",from:"thailand",to:"tokyo"},seed:{transport:"PG122 · Bangkok Airways · Koh Samui (USM) → Bangkok (BKK). Dep 9:20 AM, arr 10:35 AM. — 3h50m layover — TG660 · Thai Airways · Bangkok (BKK) → Tokyo. Dep 2:25 PM, lands 10:05 PM."}},
-    21:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 2 of 5",seed:{}},
-    22:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 3 of 5",seed:{}},
-    23:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 4 of 5",seed:{}},
-    24:{leg:"tokyo",city:"Tokyo",ico:"🎄",nights:"Night 5 of 5 · Christmas Eve",seed:{}},
-    25:{leg:"kyoto",city:"Tokyo → Kyoto",ico:"🚄",nights:"Kyoto · night 1 of 5",move:{mode:"train",brand:"Shinkansen",from:"tokyo",to:"kyoto"},seed:{transport:"Day in Tokyo, then 2:30 PM Shinkansen Tokyo → Kyoto, arriving 4:44 PM."}},
-    26:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 2 of 5",seed:{}},
-    27:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 3 of 5",seed:{}},
-    28:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 4 of 5",seed:{}},
-    29:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 5 of 5",seed:{}},
-    30:{leg:"kyoto",city:"Kyoto → Home",ico:"✈️",nights:"Half day · fly home",move:{mode:"plane",brand:"United",from:"kyoto",to:"transit"},seed:{transport:"Morning free in Kyoto, transfer to Osaka (KIX). United (op. ANA) · KIX → SFO departs 6:35 PM, lands SFO 11:50 AM same day.",stay:"Check out; overnight flight home."}},
+    20:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 1 of 6",move:{mode:"plane",brand:"Bangkok Air → Thai",from:"thailand",to:"tokyo"},seed:{transport:"PG122 · Bangkok Airways · Koh Samui (USM) → Bangkok (BKK). Dep 9:20 AM, arr 10:35 AM. — 3h50m layover — TG660 · Thai Airways · Bangkok (BKK) → Tokyo. Dep 2:25 PM, lands 10:05 PM."}},
+    21:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 2 of 6",seed:{}},
+    22:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 3 of 6",seed:{}},
+    23:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 4 of 6",seed:{}},
+    24:{leg:"tokyo",city:"Tokyo",ico:"🎄",nights:"Night 5 of 6 · Christmas Eve",seed:{}},
+    25:{leg:"tokyo",city:"Tokyo",ico:"🎄",nights:"Night 6 of 6 · Christmas Day",seed:{}},
+    26:{leg:"kyoto",city:"Tokyo → Kyoto",ico:"🚄",nights:"Kyoto · night 1 of 5",move:{mode:"train",brand:"Shinkansen",from:"tokyo",to:"kyoto"},seed:{transport:"Morning in Tokyo, then 2:30 PM Shinkansen Tokyo → Kyoto, arriving 4:44 PM."}},
+    27:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 2 of 5",seed:{}},
+    28:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 3 of 5",seed:{}},
+    29:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 4 of 5",seed:{}},
+    30:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 5 of 5 · New Year's Eve eve",seed:{}},
+    31:{leg:"kyoto",city:"Kyoto → Home",ico:"✈️",nights:"Half day · fly home",move:{mode:"plane",brand:"United",from:"kyoto",to:"transit"},seed:{transport:"Morning free in Kyoto, transfer to Osaka (KIX). United (op. ANA) · KIX → SFO departs 6:35 PM, lands SFO 11:50 AM same day.",stay:"Check out; overnight flight home."}},
   },
 };
 
@@ -418,9 +419,9 @@ const LEGS=[
   {kind:"cap",short:"✈️ DEC 11<br>DEPART SFO",label:"Dec 11 — Depart SFO",note:"United · SFO → HKG · 11:15 PM, nonstop 15h 30m"},
   {leg:"hongkong",city:"Hong Kong",d1:13,d2:13,nights:1,hotel:"Hotel TBD",via:"✈️ United — lands 6:45 AM Dec 13"},
   {leg:"thailand",city:"Koh Samui",d1:14,d2:19,nights:6,hotel:"Banyan Tree — Ocean View Pool Villa",via:"✈️ Bangkok Airways — 5:05 PM → 7:35 PM"},
-  {leg:"tokyo",city:"Tokyo",d1:20,d2:24,nights:5,hotel:"Hotel TBD",via:"✈️ Bangkok Airways PG122 + Thai TG660 — lands 10:05 PM"},
-  {leg:"kyoto",city:"Kyoto",d1:25,d2:29,nights:5,hotel:"Hotel TBD",via:"🚄 Shinkansen — 2:30 PM → 4:44 PM"},
-  {kind:"cap",short:"✈️ DEC 30<br>FLY HOME",label:"Dec 30 — Fly home",note:"United · KIX → SFO · 6:35 PM, lands 11:50 AM"},
+  {leg:"tokyo",city:"Tokyo",d1:20,d2:25,nights:6,hotel:"Hotel TBD",via:"✈️ Bangkok Airways PG122 + Thai TG660 — lands 10:05 PM"},
+  {leg:"kyoto",city:"Kyoto",d1:26,d2:30,nights:5,hotel:"Hotel TBD",via:"🚄 Shinkansen — 2:30 PM → 4:44 PM"},
+  {kind:"cap",short:"✈️ DEC 31<br>FLY HOME",label:"Dec 31 — Fly home",note:"United · KIX → SFO · 6:35 PM, lands 11:50 AM"},
 ];
 
 const CATS={Flights:"#3730a3",Lodging:"#0f766e",Activities:"#c2410c",Food:"#b45309",Transport:"#6b7280",Other:"#9d174d"};
@@ -432,8 +433,8 @@ const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&q
 const fmt$=n=>"$"+Math.round(n||0).toLocaleString("en-US");
 const modeGlyph=m=> m==="train"?"🚄":(m==="boat"?"⛴️":"✈️");
 const stripe2=info=>REGIONS[info.leg===info.move.to?info.move.from:info.move.to].color;
-const noteKey=(d,k)=>`planA2-${d}-${k}`;
-const EXP_KEY="planA2-expenses";
+const noteKey=(d,k)=>`planA3-${d}-${k}`;
+const EXP_KEY="planA3-expenses";
 
 const flash=document.getElementById("saveflash");let ft;
 function showSaved(){flash.classList.add("show");clearTimeout(ft);ft=setTimeout(()=>flash.classList.remove("show"),900);}
@@ -606,13 +607,13 @@ const TRAVEL={
     {ico:"✈️",main:"TG660 · Thai Airways · BKK → Tokyo",sub:"2:25 PM → 10:05 PM · ~6h 40m"},
     {ico:"🚕",main:"Airport → Tokyo hotel",sub:"~45 min"},
   ],
-  25:[
+  26:[
     {ico:"🏨",main:"Tokyo hotel → Tokyo Station",sub:"~20 min"},
     {ico:"🕐",main:"Station buffer",sub:"30 min before departure"},
     {ico:"🚄",main:"Shinkansen · Tokyo → Kyoto",sub:"2:30 PM → 4:44 PM · 2h 14m"},
     {ico:"🚕",main:"Kyoto Station → hotel",sub:"~15 min"},
   ],
-  30:[
+  31:[
     {ico:"🏨",main:"Kyoto hotel → Osaka Kansai (KIX)",sub:"~90 min"},
     {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
     {ico:"✈️",main:"United (op. ANA) · KIX → SFO",sub:"6:35 PM → 11:50 AM same day · ~10h 15m"},
