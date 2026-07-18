@@ -88,7 +88,7 @@
     border-left:4px solid var(--c);cursor:pointer;transition:transform .12s,box-shadow .12s}
   .cell.trip:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(60,40,20,.15)}
   .cell.trip .num{color:color-mix(in srgb,var(--c) 65%,var(--ink))}
-  .cell.travel{background:repeating-linear-gradient(-45deg,var(--tint) 0 9px,color-mix(in srgb,var(--c) 13%,var(--card)) 9px 18px)}
+  .cell.travel{background:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--c2,var(--c)) 13%,var(--card)) 0 9px,color-mix(in srgb,var(--c) 13%,var(--card)) 9px 18px)}
   .cell .city{font-family:var(--serif);font-weight:600;font-size:15.5px;line-height:1.15;letter-spacing:-.01em;
     color:var(--c);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cell .move,.ag-row .move,.dc-main .move{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;max-width:100%;margin-top:6px;
@@ -105,7 +105,7 @@
   .ag-row{--tint:color-mix(in srgb,var(--c) 7%,var(--card));display:flex;gap:12px;align-items:flex-start;
     background:var(--tint);border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));border-left:4px solid var(--c);
     border-radius:11px;padding:10px 12px;cursor:pointer}
-  .ag-row.travel{background:repeating-linear-gradient(-45deg,var(--tint) 0 9px,color-mix(in srgb,var(--c) 13%,var(--card)) 9px 18px)}
+  .ag-row.travel{background:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--c2,var(--c)) 13%,var(--card)) 0 9px,color-mix(in srgb,var(--c) 13%,var(--card)) 9px 18px)}
   .ag-date{flex:0 0 36px;text-align:center;padding-top:1px}
   .ag-date b{display:block;font-family:var(--sans);font-size:17px;font-weight:700;color:color-mix(in srgb,var(--c) 65%,var(--ink));line-height:1.1}
   .ag-date span{font-family:var(--sans);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--faint)}
@@ -160,10 +160,14 @@
   .hub-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 14px;padding:12px 46px 10px 20px;border-bottom:1px solid var(--line);position:relative}
   .hub-head .m-city{font-size:22px;margin:0}
   .hub-head .m-sub{margin-top:0}
-  .hub-cards{flex:1;overflow-y:auto;padding:14px 16px 22px;display:flex;flex-direction:column;gap:10px}
+  .hub-views{flex:1;min-height:0;position:relative;display:flex;overflow:hidden}
+  .hub-pane{flex:0 0 100%;min-width:0;overflow-y:auto;padding:14px 16px 22px;transition:transform .28s ease}
+  .hub-views.dsel .hub-pane{transform:translateX(-100%)}
+  .pane-list{display:flex;flex-direction:column;gap:10px}
   .dcard{--tint:color-mix(in srgb,var(--c) 7%,var(--card));border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));
     border-left:4px solid var(--c);border-radius:11px;background:var(--card)}
-  .dcard.sel{background:var(--tint);box-shadow:0 8px 20px rgba(60,40,20,.12)}
+  .dcard.travel{background:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--c2,var(--c)) 10%,var(--card)) 0 9px,color-mix(in srgb,var(--c) 10%,var(--card)) 9px 18px)}
+  .dcard:hover{background:var(--tint)}
   .dc-head{display:flex;gap:12px;padding:10px 12px;cursor:pointer;align-items:flex-start}
   .dc-date{flex:0 0 36px;text-align:center;padding-top:1px}
   .dc-date b{display:block;font-family:var(--sans);font-size:17px;font-weight:700;color:color-mix(in srgb,var(--c) 65%,var(--ink));line-height:1.1}
@@ -171,10 +175,32 @@
   .dc-main{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start}
   .dc-city{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--c);letter-spacing:-.01em;line-height:1.2}
   .dc-sub{font-family:var(--sans);font-size:9.5px;color:var(--faint);margin-top:3px}
-  .dc-car{font-family:var(--sans);color:var(--faint);font-size:12px;padding-top:4px;transition:transform .15s}
-  .dcard.sel .dc-car{transform:rotate(180deg)}
-  .dc-body{display:none;padding:4px 14px 14px;border-top:1px dashed var(--line)}
-  .dcard.sel .dc-body{display:block}
+  .dc-car{font-family:var(--sans);color:var(--faint);font-size:14px;padding-top:4px}
+  /* day detail sub-page */
+  .dd-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .back-btn{background:none;border:none;font-family:var(--sans);font-size:12px;font-weight:700;color:var(--faint);cursor:pointer;padding:0;letter-spacing:.04em}
+  .back-btn:hover{color:var(--ink)}
+  .dd-date{font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .dd-title{font-family:var(--serif);font-style:italic;font-weight:600;font-size:18px;letter-spacing:-.01em;margin-left:auto}
+  .dd-sec{margin-top:14px}
+  .dd-lbl{font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);
+    border-bottom:1px solid var(--line);padding-bottom:5px;margin-bottom:8px}
+  .dd-empty{font-family:var(--sans);font-size:11.5px;font-style:italic;color:var(--faint)}
+  .it-sub{font-family:var(--sans);font-size:10.5px;color:var(--faint)}
+  .it-link{color:inherit;font-weight:600;text-decoration:none;border-bottom:1px dashed var(--rule)}
+  .it-link:hover{color:var(--teal);border-bottom-color:var(--teal)}
+  .dd-notes{width:100%;min-height:70px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+    font-family:inherit;font-size:14px;color:var(--ink);background:#fffef9;line-height:1.5}
+  .dd-notes:focus{outline:none;border-color:var(--rule);background:#fff}
+  /* travel itinerary timeline */
+  .tl{margin-top:2px}
+  .tl-row{display:flex;gap:11px;position:relative;padding-bottom:13px}
+  .tl-row::before{content:"";position:absolute;left:9px;top:20px;bottom:1px;width:2px;background:var(--line)}
+  .tl-row:last-child{padding-bottom:2px}
+  .tl-row:last-child::before{display:none}
+  .tl-ico{flex:0 0 20px;text-align:center;font-size:12px;line-height:1.5}
+  .tl-main{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--ink-soft);line-height:1.4}
+  .tl-sub{font-family:var(--sans);font-size:10.5px;color:var(--faint)}
   @media(max-width:860px){
     .scrim{padding:0}
     .modal-hub{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;flex-direction:column}
@@ -300,7 +326,10 @@
   <div class="hub-side">
     <div class="hub-head"><button class="m-close" id="mClose">&times;</button>
       <div class="m-city" id="hubCity"></div><div class="m-eyebrow" id="hubEye"></div><div class="m-sub" id="hubSub"></div></div>
-    <div class="hub-cards" id="hubCards"></div>
+    <div class="hub-views" id="hubViews">
+      <div class="hub-pane pane-list" id="hubList"></div>
+      <div class="hub-pane" id="hubDetail"></div>
+    </div>
   </div>
 </div></div>
 
@@ -333,25 +362,25 @@ const PLAN={
     {desc:"Shinkansen ×2 — Tokyo → Kyoto (Dec 25), $83 each", cat:"Transport", cash:166, points:0, prog:""},
   ],
   days:{
-    12:{leg:"transit",city:"Depart SFO",ico:"✈️",nights:"Overnight flight",move:{mode:"plane",brand:"United"},seed:{transport:"UA29 · SFO → Singapore (SIN). Departs 10:40 AM. Overnight over the Pacific.",stay:"Red-eye on the plane."}},
+    12:{leg:"transit",city:"Depart SFO",ico:"✈️",nights:"Overnight flight",move:{mode:"plane",brand:"United",from:"transit",to:"singapore"},seed:{transport:"UA29 · SFO → Singapore (SIN). Departs 10:40 AM. Overnight over the Pacific.",stay:"Red-eye on the plane."}},
     13:{leg:"singapore",city:"Singapore",ico:"🏙️",nights:"Night 1 of 2 · arrive PM",hotel:"Raffles Singapore",seed:{transport:"UA29 lands Singapore (SIN) 8:15 PM (Dec 13 — cross the date line). Evening arrival.",stay:"Raffles Singapore — 2 nights. Check in."}},
     14:{leg:"singapore",city:"Singapore",ico:"🏙️",nights:"Night 2 of 2 · full day",hotel:"Raffles Singapore",seed:{stay:"Raffles Singapore — night 2."}},
-    15:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 1 of 5",move:{mode:"plane",brand:"Scoot"},hotel:"Banyan Tree",seed:{transport:"TR642 · Scoot · Singapore → Koh Samui (USM). Departs 10:00 AM, lands 11:00 AM.",stay:"Banyan Tree Koh Samui — Ocean View Pool Villa. Check in."}},
+    15:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 1 of 5",move:{mode:"plane",brand:"Scoot",from:"singapore",to:"thailand"},hotel:"Banyan Tree",seed:{transport:"TR642 · Scoot · Singapore → Koh Samui (USM). Departs 10:00 AM, lands 11:00 AM.",stay:"Banyan Tree Koh Samui — Ocean View Pool Villa. Check in."}},
     16:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 2 of 5",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
     17:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 3 of 5",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
     18:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 4 of 5",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
     19:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 5 of 5",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
-    20:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 1 of 5",move:{mode:"plane",brand:"Bangkok Air → Thai"},seed:{transport:"PG122 · Bangkok Airways · Koh Samui (USM) → Bangkok (BKK). Dep 9:20 AM, arr 10:35 AM. — 3h50m layover — TG660 · Thai Airways · Bangkok (BKK) → Tokyo. Dep 2:25 PM, lands 10:05 PM."}},
+    20:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 1 of 5",move:{mode:"plane",brand:"Bangkok Air → Thai",from:"thailand",to:"tokyo"},seed:{transport:"PG122 · Bangkok Airways · Koh Samui (USM) → Bangkok (BKK). Dep 9:20 AM, arr 10:35 AM. — 3h50m layover — TG660 · Thai Airways · Bangkok (BKK) → Tokyo. Dep 2:25 PM, lands 10:05 PM."}},
     21:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 2 of 5",seed:{}},
     22:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 3 of 5",seed:{}},
     23:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 4 of 5",seed:{}},
     24:{leg:"tokyo",city:"Tokyo",ico:"🎄",nights:"Night 5 of 5 · Christmas Eve",seed:{}},
-    25:{leg:"kyoto",city:"Tokyo → Kyoto",ico:"🚄",nights:"Kyoto · night 1 of 5",move:{mode:"train",brand:"Shinkansen"},seed:{transport:"Day in Tokyo, then 2:30 PM Shinkansen Tokyo → Kyoto, arriving 4:44 PM."}},
+    25:{leg:"kyoto",city:"Tokyo → Kyoto",ico:"🚄",nights:"Kyoto · night 1 of 5",move:{mode:"train",brand:"Shinkansen",from:"tokyo",to:"kyoto"},seed:{transport:"Day in Tokyo, then 2:30 PM Shinkansen Tokyo → Kyoto, arriving 4:44 PM."}},
     26:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 2 of 5",seed:{}},
     27:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 3 of 5",seed:{}},
     28:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 4 of 5",seed:{}},
     29:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 5 of 5",seed:{}},
-    30:{leg:"kyoto",city:"Kyoto → Home",ico:"✈️",nights:"Half day",move:{mode:"plane",brand:"United"},seed:{transport:"Morning free in Kyoto, then transfer to Osaka (KIX). UA34 · KIX → SFO departs 6:35 PM, lands SFO 11:50 AM (same day).",stay:"Check out; overnight flight home."}},
+    30:{leg:"kyoto",city:"Kyoto → Home",ico:"✈️",nights:"Half day",move:{mode:"plane",brand:"United",from:"kyoto",to:"transit"},seed:{transport:"Morning free in Kyoto, then transfer to Osaka (KIX). UA34 · KIX → SFO departs 6:35 PM, lands SFO 11:50 AM (same day).",stay:"Check out; overnight flight home."}},
   },
 };
 
@@ -484,7 +513,7 @@ function renderCalendar(){
     if(info.move) inner+=`<span class="move">${modeGlyph(info.move.mode)} ${esc(info.move.brand)}</span>`;
     if(ht) inner+=`<div class="hotel${ht.tbd?" tbd":""}">⌂ ${esc(ht.name)}</div>`;
     inner+=`<div class="sub">${esc(info.nights)}</div>`;
-    h+=`<div class="cell trip${info.move?" travel":""}" style="--c:${c}" data-day="${d}">${inner}</div>`;
+    h+=`<div class="cell trip${info.move?" travel":""}" style="--c:${c}${info.move?`;--c2:${REGIONS[info.move.from].color}`:""}" data-day="${d}">${inner}</div>`;
   }
   g.innerHTML=h;
   g.querySelectorAll(".cell.trip").forEach(cell=>cell.onclick=()=>openDay(+cell.dataset.day));
@@ -496,7 +525,7 @@ function renderAgenda(){
   for(let d=1;d<=DAYS_IN_DEC;d++){
     const info=PLAN.days[d]; if(!info) continue;
     const c=REGIONS[info.leg].color, ht=hotelFor(d,info);
-    h+=`<div class="ag-row${info.move?" travel":""}" style="--c:${c}" data-day="${d}">
+    h+=`<div class="ag-row${info.move?" travel":""}" style="--c:${c}${info.move?`;--c2:${REGIONS[info.move.from].color}`:""}" data-day="${d}">
       <div class="ag-date"><b>${d}</b><span>${WD_SHORT[wdOf(d)]}</span></div>
       <div class="ag-main">
         <div class="ag-city">${esc(info.city)} <span class="ag-ico">${info.ico}</span></div>
@@ -509,87 +538,184 @@ function renderAgenda(){
   a.querySelectorAll(".ag-row").forEach(r=>r.onclick=()=>openDay(+r.dataset.day));
 }
 
-/* ---- Leg hub: full map + day cards ---- */
+/* ---- Leg hub: full map + day sub-pages ---- */
 const CITY={transit:{c:[37.6213,-122.379],z:11},singapore:{c:[1.2966,103.8522],z:13},thailand:{c:[9.512,100.043],z:11},tokyo:{c:[35.6812,139.7671],z:12},kyoto:{c:[35.0116,135.7681],z:13}};
 const HOTELGEO={ // hotel pin coords — adjust here if off
   singapore:{name:"Raffles Singapore",lat:1.2949,lng:103.8544},
   thailand:{name:"Banyan Tree Koh Samui",lat:9.47285,lng:100.06933},
 };
-const PLACES_KEY="planA-places";
-let PLACES;
-try{PLACES=JSON.parse(localStorage.getItem(PLACES_KEY))||{};}catch(e){PLACES={};}
-function savePlaces(){localStorage.setItem(PLACES_KEY,JSON.stringify(PLACES));showSaved();}
+// Curated day content (edited via chat with Claude). Items: {name, note?, lat?, lng?} — items with coords become map pins.
+const CONTENT={
+  17:{todo:[
+    {name:"Koh Tao diving day trip — Silent Divers",note:"Pickup 7:45 AM · boat to Koh Tao · 2 dives, lunch on board · back ~4 PM",ico:"🤿",lat:10.0922,lng:99.8395},
+  ]},
+  18:{todo:[
+    {name:"Samui Elephant Sanctuary — Morning Elephant Tour",note:"9:00 AM · Chaweng Noi · 2 adults",ico:"🐘",lat:9.5043,lng:100.0531,url:"https://share.google/tvKi7se1D8IRbeXno"},
+  ]},
+};
+const dayContent=d=>CONTENT[d]||{};
+// Travel-day itineraries (transfer times are ~estimates)
+const TRAVEL={
+  12:[
+    {ico:"⌂",main:"Home → SFO",sub:"~45 min"},
+    {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
+    {ico:"✈",main:"UA29 · United · SFO → Singapore (SIN)",sub:"10:40 AM · ~17h 35m · lands 8:15 PM Dec 13 (+1 day)"},
+    {ico:"🚕",main:"Changi → Raffles Singapore",sub:"~20 min taxi"},
+  ],
+  15:[
+    {ico:"⌂",main:"Raffles → Changi (SIN)",sub:"~20 min taxi"},
+    {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
+    {ico:"✈",main:"TR642 · Scoot · SIN → Koh Samui (USM)",sub:"10:00 AM → 11:00 AM · 1h"},
+    {ico:"🚕",main:"USM → Banyan Tree",sub:"~30 min resort transfer"},
+  ],
+  20:[
+    {ico:"⌂",main:"Banyan Tree → Koh Samui (USM)",sub:"~30 min"},
+    {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
+    {ico:"✈",main:"PG122 · Bangkok Airways · USM → Bangkok (BKK)",sub:"9:20 AM → 10:35 AM · 1h 15m"},
+    {ico:"🕐",main:"Layover in Bangkok",sub:"3h 50m"},
+    {ico:"✈",main:"TG660 · Thai Airways · BKK → Tokyo",sub:"2:25 PM → 10:05 PM · ~6h 40m"},
+    {ico:"🚕",main:"Airport → Tokyo hotel",sub:"~45 min"},
+  ],
+  25:[
+    {ico:"⌂",main:"Tokyo hotel → Tokyo Station",sub:"~20 min"},
+    {ico:"🕐",main:"Station buffer",sub:"30 min before departure"},
+    {ico:"🚄",main:"Shinkansen · Tokyo → Kyoto",sub:"2:30 PM → 4:44 PM · 2h 14m"},
+    {ico:"🚕",main:"Kyoto Station → hotel",sub:"~15 min"},
+  ],
+  30:[
+    {ico:"⌂",main:"Kyoto hotel → Osaka Kansai (KIX)",sub:"~90 min"},
+    {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
+    {ico:"✈",main:"UA34 · United · KIX → SFO",sub:"6:35 PM → 11:50 AM same day · ~10h 15m"},
+    {ico:"⌂",main:"SFO → home",sub:"~45 min"},
+  ],
+};
+
+// Real rail routes (station waypoints), keyed "from>to"
+const RAIL={
+  "tokyo>kyoto":[[35.681,139.767],[35.630,139.740],[35.507,139.617],[35.256,139.155],[35.104,139.078],[35.126,138.911],[35.142,138.663],[34.972,138.389],[34.769,138.014],[34.704,137.735],[34.763,137.381],[34.969,137.061],[35.170,136.882],[35.316,136.686],[35.314,136.290],[34.985,135.758]],
+};
 
 const scrim=document.getElementById("scrim");
-const FIELDS=[["transport","✈︎ Transport","Flights, trains, transfers, times…"],["stay","⌂ Hotel / Stay","Where you're sleeping, check-in / out…"],["plans","◎ Plans & itinerary","Sights, tours, bookings…"],["food","☕ Food & reservations","Restaurants, reservations…"],["notes","✎ Notes","Tickets, packing, reminders…"]];
 const GREY="#b3aa99";
-let hubMap=null,hubMarkers=[],hubLeg=null,hubSel=null;
+const TODO_C="#3730a3", EAT_C="#b45309";
+let hubMap=null,hubMarkers=[],hubArc=null,hubLeg=null,hubSel=null,legBounds=null;
 const legDays=leg=>Object.keys(PLAN.days).map(Number).filter(d=>PLAN.days[d].leg===leg).sort((a,b)=>a-b);
 const mkPin=(label,bg)=>L.divIcon({className:"",html:`<div class="pin" style="background:${bg}">${label}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
 
 function openDay(d){ openHub(PLAN.days[d].leg,d); }
+function legName(l){return l==="transit"?"Home":REGIONS[l].label.split(",")[0];}
 
-function cardHTML(d){
+function dayRowHTML(d){
   const info=PLAN.days[d], ht=hotelFor(d,info);
-  const head=`<div class="dc-head" data-d="${d}">
+  const c2=info.move?`;--c2:${REGIONS[info.move.from].color}`:"";
+  return `<div class="dcard${info.move?" travel":""}" style="--c:${REGIONS[info.leg].color}${c2}">
+    <div class="dc-head" data-d="${d}">
     <div class="dc-date"><b>${d}</b><span>${WD_SHORT[wdOf(d)]}</span></div>
     <div class="dc-main"><div class="dc-city">${esc(info.city)} <span class="ag-ico">${info.ico}</span></div>
       ${info.move?`<span class="move">${modeGlyph(info.move.mode)} ${esc(info.move.brand)}</span>`:""}
       ${ht?`<div class="hotel${ht.tbd?" tbd":""}">⌂ ${esc(ht.name)}</div>`:""}
       <div class="dc-sub">${esc(info.nights)}</div></div>
-    <div class="dc-car">▾</div></div>`;
-  const flds=FIELDS.map(f=>{
-    const saved=localStorage.getItem(noteKey(d,f[0]));
-    const val=(saved!=null)?saved:((info.seed&&info.seed[f[0]])||"");
-    return `<div class="fld"><label>${f[1]}</label><textarea data-d="${d}" data-k="${f[0]}" placeholder="${f[2]}">${esc(val)}</textarea></div>`;
-  }).join("");
-  const places=`<div class="fld"><label>◉ Map pins</label><div class="pl-list" data-d="${d}"></div>
-    <div class="pl-add"><input class="n" data-pn="${d}" placeholder="Place name"><input class="c" data-pc="${d}" placeholder="lat, lng"><button class="pl-btn" data-pa="${d}">Add pin</button></div>
-    <div class="map-note">Coords: in Google Maps, long-press a spot → tap the numbers → copy → paste.</div></div>`;
-  return `<div class="dcard" id="dcard-${d}" style="--c:${REGIONS[info.leg].color}">${head}<div class="dc-body">${flds}${places}</div></div>`;
+    <div class="dc-car">›</div></div></div>`;
 }
 
-function renderPlaceLists(){
-  document.querySelectorAll(".pl-list").forEach(el=>{
-    const d=+el.dataset.d;
-    el.innerHTML=(PLACES[d]||[]).map((pl,i)=>`<div class="pl-row"><span class="pl-num">${i+1}</span><span>${esc(pl.name)}</span>
-      <button class="pl-del" data-d="${d}" data-i="${i}" title="Remove pin">&times;</button></div>`).join("")||`<div class="map-note">No pins yet for this day.</div>`;
-    el.querySelectorAll(".pl-del").forEach(b=>b.onclick=()=>{PLACES[+b.dataset.d].splice(+b.dataset.i,1);savePlaces();renderPlaceLists();buildMarkers();});
-  });
+function itemsHTML(arr,color){
+  if(!arr||!arr.length) return `<div class="dd-empty">Nothing here yet — tell Claude and it shows up.</div>`;
+  return arr.map((it,i)=>`<div class="pl-row"><span class="pl-num" style="background:${color}">${it.ico||i+1}</span>
+    <div><div>${it.url?`<a class="it-link" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.name)} ↗</a>`:esc(it.name)}</div>${it.note?`<div class="it-sub">${esc(it.note)}</div>`:""}</div></div>`).join("");
+}
+const popHTML=(it,d)=>`${esc(it.name)} — Dec ${d}`+(it.url?`<br><a href="${esc(it.url)}" target="_blank" rel="noopener">Open in Google Maps ↗</a>`:"");
+function detailHTML(d){
+  const info=PLAN.days[d], days=legDays(hubLeg), ct=dayContent(d), ht=hotelFor(d,info);
+  const title=info.move?`${legName(info.move.from)} → ${legName(info.move.to)}`:
+    `Day ${days.indexOf(d)+1} of ${days.length} in ${legName(info.leg)}`;
+  const trav=info.move&&TRAVEL[d]?`<div class="dd-sec"><div class="dd-lbl">${modeGlyph(info.move.mode)} Travel itinerary</div>
+    <div class="tl">${TRAVEL[d].map(r=>`<div class="tl-row"><div class="tl-ico">${r.ico}</div>
+    <div><div class="tl-main">${esc(r.main)}</div><div class="tl-sub">${esc(r.sub)}</div></div></div>`).join("")}</div></div>`:"";
+  const saved=localStorage.getItem(noteKey(d,"notes"));
+  return `<div class="dd-top"><button class="back-btn" id="hubBack">‹ All days</button>
+      <span class="dd-date">Dec ${d} · ${WD_LONG[wdOf(d)]}</span>
+      <span class="dd-title" style="color:${REGIONS[info.leg].color}">${esc(title)}</span></div>
+    ${trav}
+    <div class="dd-sec"><div class="dd-lbl">◎ What to do</div>${itemsHTML(ct.todo,TODO_C)}</div>
+    <div class="dd-sec"><div class="dd-lbl">☕ Where to eat</div>${itemsHTML(ct.eat,EAT_C)}</div>
+    <div class="dd-sec"><div class="dd-lbl">✎ Notes</div><textarea class="dd-notes" id="ddNotes" placeholder="Free-form notes…">${esc(saved!=null?saved:"")}</textarea></div>`;
+}
+
+function showDay(d){
+  hubSel=d;
+  const pane=document.getElementById("hubDetail");
+  pane.innerHTML=detailHTML(d);
+  document.getElementById("hubViews").classList.add("dsel");
+  document.getElementById("hubBack").onclick=backToList;
+  const ta=document.getElementById("ddNotes");
+  ta.addEventListener("input",()=>{localStorage.setItem(noteKey(d,"notes"),ta.value);showSaved();});
+  pane.scrollTop=0;
+  applySelMap();
+}
+function backToList(){
+  hubSel=null;
+  document.getElementById("hubViews").classList.remove("dsel");
+  applySelMap();
 }
 
 function buildMarkers(){
   if(!hubMap)return;
   hubMarkers.forEach(x=>x.m.remove());hubMarkers=[];
   const hg=HOTELGEO[hubLeg];
-  if(hg){const m=L.marker([hg.lat,hg.lng],{icon:mkPin("⌂",REGIONS[hubLeg].color),zIndexOffset:500}).addTo(hubMap).bindPopup(esc(hg.name));hubMarkers.push({day:null,m:m,label:"⌂"});}
-  legDays(hubLeg).forEach(d=>{(PLACES[d]||[]).forEach((pl,i)=>{
-    const m=L.marker([pl.lat,pl.lng],{icon:mkPin(String(i+1),"#3730a3")}).addTo(hubMap).bindPopup(`${esc(pl.name)} — Dec ${d}`);
-    hubMarkers.push({day:d,m:m,label:String(i+1)});
-  });});
-  refreshPins();
+  if(hg){const m=L.marker([hg.lat,hg.lng],{icon:mkPin("⌂",REGIONS[hubLeg].color),zIndexOffset:500}).addTo(hubMap).bindPopup(esc(hg.name));hubMarkers.push({day:null,m:m,label:"⌂",color:REGIONS[hubLeg].color});}
+  legDays(hubLeg).forEach(d=>{
+    const ct=dayContent(d);
+    (ct.todo||[]).forEach((it,i)=>{if(it.lat==null)return;
+      const lb=it.ico||String(i+1);
+      const m=L.marker([it.lat,it.lng],{icon:mkPin(lb,TODO_C)}).addTo(hubMap).bindPopup(popHTML(it,d));
+      hubMarkers.push({day:d,m:m,label:lb,color:TODO_C});});
+    (ct.eat||[]).forEach((it,i)=>{if(it.lat==null)return;
+      const lb=it.ico||String(i+1);
+      const m=L.marker([it.lat,it.lng],{icon:mkPin(lb,EAT_C)}).addTo(hubMap).bindPopup(popHTML(it,d));
+      hubMarkers.push({day:d,m:m,label:lb,color:EAT_C});});
+  });
   const pts=hubMarkers.map(x=>x.m.getLatLng());
-  if(pts.length>1)hubMap.fitBounds(pts,{padding:[46,46]});
-  else if(pts.length===1)hubMap.setView(pts[0],14);
+  legBounds=pts.length>1?L.latLngBounds(pts).pad(0.25):null;
+  applySelMap();
 }
-
 function refreshPins(){
+  const travelSel=hubSel!=null&&!!PLAN.days[hubSel].move;
   hubMarkers.forEach(x=>{
+    if(travelSel){x.m.setOpacity(0);return;}
+    x.m.setOpacity(1);
     const active=(x.day==null)||hubSel==null||x.day===hubSel;
-    const bg=(x.day==null)?REGIONS[hubLeg].color:(active?"#3730a3":GREY);
-    x.m.setIcon(mkPin(x.label,bg));
+    x.m.setIcon(mkPin(x.label,active?x.color:GREY));
     x.m.setZIndexOffset(x.day==null?500:(active?400:0));
   });
 }
-
-function selectDay(d){
-  hubSel=(hubSel===d)?null:d;
-  document.querySelectorAll(".dcard").forEach(c=>c.classList.toggle("sel",+c.id.slice(6)===hubSel));
-  refreshPins();
-  if(hubSel!=null){
-    document.querySelectorAll(`#dcard-${hubSel} textarea`).forEach(ta=>{ta.style.height="auto";ta.style.height=(ta.scrollHeight+2)+"px";});
-    const el=document.getElementById("dcard-"+hubSel);
-    if(el)el.scrollIntoView({block:"nearest",behavior:"smooth"});
+function clearArc(){if(hubArc){hubArc.forEach(l=>l.remove());hubArc=null;}}
+function arcPts(a,b){
+  if(b[1]-a[1]>180)b=[b[0],b[1]-360]; else if(a[1]-b[1]>180)b=[b[0],b[1]+360];
+  const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy)||1,off=len*0.18;
+  const cx=mx-dy/len*off,cy=my+dx/len*off,pts=[];
+  for(let i=0;i<=32;i++){const t=i/32,u=1-t;pts.push([u*u*a[0]+2*u*t*cx+t*t*b[0],u*u*a[1]+2*u*t*cy+t*t*b[1]]);}
+  return pts;
+}
+function applySelMap(){
+  if(!hubMap)return;
+  refreshPins();clearArc();
+  const info=hubSel!=null?PLAN.days[hubSel]:null;
+  if(info&&info.move){
+    const mv=info.move,col=REGIONS[mv.to==="transit"?mv.from:mv.to].color;
+    const endPt=l=>HOTELGEO[l]?[HOTELGEO[l].lat,HOTELGEO[l].lng]:CITY[l].c;
+    const rail=RAIL[mv.from+">"+mv.to];
+    const pts=(mv.mode==="train"&&rail)?rail:arcPts(endPt(mv.from),endPt(mv.to));
+    const a=pts[0],b=pts[pts.length-1];
+    hubArc=[
+      L.polyline(pts,{color:col,weight:2.5,dashArray:mv.mode==="train"?null:"3 7"}).addTo(hubMap),
+      L.circleMarker(a,{radius:6,color:"#fffdf6",weight:2,fillColor:REGIONS[mv.from].color,fillOpacity:1}).addTo(hubMap).bindPopup(esc(legName(mv.from))),
+      L.circleMarker(b,{radius:6,color:"#fffdf6",weight:2,fillColor:REGIONS[mv.to].color,fillOpacity:1}).addTo(hubMap).bindPopup(esc(legName(mv.to))),
+    ];
+    hubMap.fitBounds(L.latLngBounds(pts),{padding:[50,50]});
+  }else if(legBounds){
+    hubMap.fitBounds(legBounds,{padding:[30,30]});
+  }else{
+    const cfg=CITY[hubLeg];if(cfg)hubMap.setView(cfg.c,cfg.z);
   }
 }
 
@@ -598,34 +724,21 @@ function openHub(leg,selDay){
   const c=REGIONS[leg].color,days=legDays(leg);
   document.querySelector("#scrim .modal").style.borderTopColor=c;
   document.getElementById("hubEye").textContent=`Dec ${days[0]} – ${days[days.length-1]} · ${days.length} day${days.length>1?"s":""}`;
-  const ce=document.getElementById("hubCity");ce.textContent=REGIONS[leg].label.split(",")[0];ce.style.color=c;
+  const ce=document.getElementById("hubCity");ce.textContent=leg==="transit"?"In transit":legName(leg);ce.style.color=c;
   const hg=HOTELGEO[leg];
   document.getElementById("hubSub").textContent=hg?"⌂ "+hg.name:(leg==="transit"?"":"⌂ Hotel TBD");
-  document.getElementById("hubCards").innerHTML=days.map(cardHTML).join("");
-  document.querySelectorAll(".dc-head").forEach(h=>h.onclick=()=>selectDay(+h.dataset.d));
-  document.querySelectorAll(".dc-body textarea").forEach(ta=>{
-    const grow=()=>{ta.style.height="auto";ta.style.height=(ta.scrollHeight+2)+"px";};grow();
-    ta.addEventListener("input",()=>{grow();localStorage.setItem(noteKey(+ta.dataset.d,ta.dataset.k),ta.value);showSaved();});
-  });
-  document.querySelectorAll("[data-pa]").forEach(btn=>btn.onclick=()=>{
-    const d=+btn.dataset.pa;
-    const nameEl=document.querySelector(`[data-pn="${d}"]`),coordEl=document.querySelector(`[data-pc="${d}"]`);
-    const name=nameEl.value.trim(),m=coordEl.value.trim().match(/(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)/);
-    if(!name||!m)return;
-    (PLACES[d]=PLACES[d]||[]).push({name:name,lat:+m[1],lng:+m[2]});
-    savePlaces();nameEl.value="";coordEl.value="";
-    renderPlaceLists();buildMarkers();
-  });
-  renderPlaceLists();
+  document.getElementById("hubViews").classList.remove("dsel");
+  document.getElementById("hubList").innerHTML=days.map(dayRowHTML).join("");
+  document.querySelectorAll("#hubList .dc-head").forEach(h=>h.onclick=()=>showDay(+h.dataset.d));
   scrim.classList.add("open");
   initHubMap();
-  if(selDay!=null)selectDay(selDay);
+  if(selDay!=null)showDay(selDay);
 }
 
 function initHubMap(){
   const el=document.getElementById("hubMap"),cfg=CITY[hubLeg];
   if(hubMap){hubMap.remove();hubMap=null;}
-  hubMarkers=[];
+  hubMarkers=[];hubArc=null;legBounds=null;
   if(typeof L==="undefined"||!cfg){el.innerHTML='<div class="map-note" style="padding:14px">Map needs an internet connection to load.</div>';return;}
   el.innerHTML="";
   hubMap=L.map(el).setView(cfg.c,cfg.z);
@@ -633,7 +746,7 @@ function initHubMap(){
   setTimeout(()=>{if(hubMap){hubMap.invalidateSize();buildMarkers();}},60);
 }
 
-function closeHub(){scrim.classList.remove("open");if(hubMap){hubMap.remove();hubMap=null;}hubMarkers=[];}
+function closeHub(){scrim.classList.remove("open");clearArc();if(hubMap){hubMap.remove();hubMap=null;}hubMarkers=[];hubSel=null;}
 document.getElementById("mClose").onclick=closeHub;
 scrim.addEventListener("click",e=>{if(e.target===scrim)closeHub();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeHub();scrimCost.classList.remove("open");}});
