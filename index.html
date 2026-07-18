@@ -167,6 +167,8 @@
   @keyframes dayInL{from{transform:translateX(-52px);opacity:0}to{transform:none;opacity:1}}
   .dd-wrap.anim-fwd{animation:dayInR .24s ease-out}
   .dd-wrap.anim-back{animation:dayInL .24s ease-out}
+  .hub-pane.anim-fwd{animation:dayInR .24s ease-out}
+  .hub-pane.anim-back{animation:dayInL .24s ease-out}
   .pane-list{display:flex;flex-direction:column;gap:10px}
   .dcard{--tint:color-mix(in srgb,var(--c) 7%,var(--card));border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));
     border-left:4px solid var(--c);border-radius:11px;background:var(--card)}
@@ -711,15 +713,23 @@ function navDay(dir){
     else backToList();
   }
 }
-(()=>{
-  const pane=document.getElementById("hubDetail");let sx=0,sy=0,st=0;
-  pane.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();},{passive:true});
-  pane.addEventListener("touchend",e=>{
+function onSwipe(el,fnH,fnDown){
+  let sx=0,sy=0,st=0,stop=0;
+  el.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();stop=el.scrollTop;},{passive:true});
+  el.addEventListener("touchend",e=>{
     const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
-    if(Date.now()-st>700||Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.6)return;
-    navDay(dx<0?1:-1);
+    if(Date.now()-st>700)return;
+    if(Math.abs(dx)>=60&&Math.abs(dy)<=Math.abs(dx)*0.6){fnH(dx<0?1:-1);return;}
+    if(fnDown&&dy>=70&&Math.abs(dx)<=dy*0.6&&stop<=0)fnDown();
   },{passive:true});
-})();
+}
+function navLeg(dir){
+  const i=LEGSEQ.indexOf(hubLeg)+dir;
+  if(i<0||i>=LEGSEQ.length)return;
+  openHub(LEGSEQ[i],null,dir);
+}
+onSwipe(document.getElementById("hubDetail"),navDay,backToList);
+onSwipe(document.getElementById("hubList"),navLeg);
 
 function buildMarkers(){
   if(!hubMap)return;
@@ -782,7 +792,7 @@ function applySelMap(){
   }
 }
 
-function openHub(leg,selDay){
+function openHub(leg,selDay,dir){
   hubLeg=leg;hubSel=null;
   const c=REGIONS[leg].color,days=legDays(leg);
   document.querySelector("#scrim .modal").style.borderTopColor=c;
@@ -793,6 +803,9 @@ function openHub(leg,selDay){
   document.getElementById("hubViews").classList.remove("dsel");
   document.getElementById("hubList").innerHTML=days.map(dayRowHTML).join("");
   document.querySelectorAll("#hubList .dc-head").forEach(h=>h.onclick=()=>onDayClick(+h.dataset.d));
+  const hl=document.getElementById("hubList");
+  hl.classList.remove("anim-fwd","anim-back");
+  if(dir){void hl.offsetWidth;hl.classList.add(dir>0?"anim-fwd":"anim-back");}
   scrim.classList.add("open");
   initHubMap();
   if(selDay!=null)onDayClick(selDay);
