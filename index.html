@@ -169,6 +169,15 @@
   .dd-wrap.anim-back{animation:dayInL .24s ease-out}
   .hub-pane.anim-fwd{animation:dayInR .24s ease-out}
   .hub-pane.anim-back{animation:dayInL .24s ease-out}
+  .hub-filter{position:absolute;inset:0;z-index:6;display:none;overflow-y:auto;overscroll-behavior:contain;
+    background:var(--card);padding:14px 16px 22px}
+  .map-fabs{position:absolute;right:12px;top:12px;z-index:900;display:flex;gap:8px}
+  .mfab{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--rule);
+    box-shadow:0 4px 14px rgba(30,20,10,.28);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+  .mfab:hover{transform:translateY(-1px)}
+  .mfab.on{color:#fff;border-color:transparent}
+  #fabTodo.on{background:#3730a3}
+  #fabEat.on{background:#b45309}
   .pane-list{display:flex;flex-direction:column;gap:10px}
   .dcard{--tint:color-mix(in srgb,var(--c) 7%,var(--card));border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));
     border-left:4px solid var(--c);border-radius:11px;background:var(--card)}
@@ -218,6 +227,7 @@
     .modal-hub{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;flex-direction:column}
     .hub-map{flex:0 0 36dvh}
     .hub-side{border-left:none}
+    .map-fabs{top:auto;bottom:12px}
   }
   .pin{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;
     font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;border:2px solid #fffdf6;box-shadow:0 2px 6px rgba(0,0,0,.35)}
@@ -334,13 +344,19 @@
 </div>
 
 <div class="scrim" id="scrim"><div class="modal modal-hub">
-  <div class="hub-map"><div id="hubMap"></div></div>
+  <div class="hub-map"><div id="hubMap"></div>
+    <div class="map-fabs">
+      <button class="mfab" id="fabTodo" title="All activities for this leg">◎</button>
+      <button class="mfab" id="fabEat" title="All restaurants for this leg">🍴</button>
+    </div>
+  </div>
   <div class="hub-side">
     <div class="hub-head"><button class="m-close" id="mClose">&times;</button>
       <div class="m-city" id="hubCity"></div><div class="m-eyebrow" id="hubEye"></div><div class="m-sub" id="hubSub"></div></div>
     <div class="hub-views" id="hubViews">
       <div class="hub-pane pane-list" id="hubList"></div>
       <div class="hub-pane" id="hubDetail"></div>
+      <div class="hub-filter" id="hubFilter"></div>
     </div>
   </div>
 </div></div>
@@ -612,7 +628,7 @@ const RAIL={
 const scrim=document.getElementById("scrim");
 const GREY="#b3aa99";
 const TODO_C="#3730a3", EAT_C="#b45309";
-let hubMap=null,hubMarkers=[],hubArc=null,hubLeg=null,hubSel=null,legBounds=null;
+let hubMap=null,hubMarkers=[],hubArc=null,hubLeg=null,hubSel=null,legBounds=null,hubFilter=null;
 const legDays=leg=>Object.keys(PLAN.days).map(Number).filter(d=>PLAN.days[d].leg===leg).sort((a,b)=>a-b);
 const mkPin=(label,bg)=>L.divIcon({className:"",html:`<div class="pin" style="background:${bg}">${label}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
 
@@ -650,7 +666,7 @@ function sectionsHTML(d){
   const saved=localStorage.getItem(noteKey(d,"notes"));
   return `${trav}
     <div class="dd-sec"><div class="dd-lbl">◎ What to do</div>${itemsHTML(ct.todo,TODO_C)}</div>
-    <div class="dd-sec"><div class="dd-lbl">☕ Where to eat</div>${itemsHTML(ct.eat,EAT_C)}</div>
+    <div class="dd-sec"><div class="dd-lbl">🍴 Where to eat</div>${itemsHTML(ct.eat,EAT_C)}</div>
     <div class="dd-sec"><div class="dd-lbl">✎ Notes</div><textarea class="dd-notes" data-d="${d}" placeholder="Free-form notes…">${esc(saved!=null?saved:"")}</textarea></div>`;
 }
 function wireNotes(root,d){
@@ -735,23 +751,31 @@ function buildMarkers(){
   if(!hubMap)return;
   hubMarkers.forEach(x=>x.m.remove());hubMarkers=[];
   const hg=HOTELGEO[hubLeg];
-  if(hg){const m=L.marker([hg.lat,hg.lng],{icon:mkPin("🏨",REGIONS[hubLeg].color),zIndexOffset:500}).addTo(hubMap).bindPopup(esc(hg.name));hubMarkers.push({day:null,m:m,label:"🏨",color:REGIONS[hubLeg].color});}
+  if(hg){const m=L.marker([hg.lat,hg.lng],{icon:mkPin("🏨",REGIONS[hubLeg].color),zIndexOffset:500}).addTo(hubMap).bindPopup(esc(hg.name));hubMarkers.push({day:null,m:m,label:"🏨",color:REGIONS[hubLeg].color,kind:null});}
   legDays(hubLeg).forEach(d=>{
     const ct=dayContent(d);
     (ct.todo||[]).forEach((it,i)=>{if(it.lat==null)return;
       const lb=it.ico||String(i+1);
       const m=L.marker([it.lat,it.lng],{icon:mkPin(lb,TODO_C)}).addTo(hubMap).bindPopup(popHTML(it,d));
-      hubMarkers.push({day:d,m:m,label:lb,color:TODO_C});});
+      hubMarkers.push({day:d,m:m,label:lb,color:TODO_C,kind:"todo"});});
     (ct.eat||[]).forEach((it,i)=>{if(it.lat==null)return;
       const lb=it.ico||String(i+1);
       const m=L.marker([it.lat,it.lng],{icon:mkPin(lb,EAT_C)}).addTo(hubMap).bindPopup(popHTML(it,d));
-      hubMarkers.push({day:d,m:m,label:lb,color:EAT_C});});
+      hubMarkers.push({day:d,m:m,label:lb,color:EAT_C,kind:"eat"});});
   });
   const pts=hubMarkers.map(x=>x.m.getLatLng());
   legBounds=pts.length>1?L.latLngBounds(pts).pad(0.25):null;
   applySelMap();
 }
 function refreshPins(){
+  if(hubFilter){
+    hubMarkers.forEach(x=>{
+      const show=(x.day==null)||x.kind===hubFilter;
+      x.m.setOpacity(show?1:0);
+      if(show){x.m.setIcon(mkPin(x.label,x.color));x.m.setZIndexOffset(x.day==null?500:400);}
+    });
+    return;
+  }
   const travelSel=hubSel!=null&&!!PLAN.days[hubSel].move;
   hubMarkers.forEach(x=>{
     if(travelSel){x.m.setOpacity(0);return;}
@@ -772,6 +796,13 @@ function arcPts(a,b){
 function applySelMap(){
   if(!hubMap)return;
   refreshPins();clearArc();
+  if(hubFilter){
+    const pts=hubMarkers.filter(x=>(x.day==null)||x.kind===hubFilter).map(x=>x.m.getLatLng());
+    if(pts.length>1)hubMap.fitBounds(L.latLngBounds(pts).pad(0.25));
+    else if(pts.length===1)hubMap.setView(pts[0],14);
+    else{const cfg=CITY[hubLeg];if(cfg)hubMap.setView(cfg.c,cfg.z);}
+    return;
+  }
   const info=hubSel!=null?PLAN.days[hubSel]:null;
   if(info&&info.move){
     const mv=info.move,col=REGIONS[mv.to==="transit"?mv.from:mv.to].color;
@@ -794,6 +825,8 @@ function applySelMap(){
 
 function openHub(leg,selDay,dir){
   hubLeg=leg;hubSel=null;
+  hubFilter=null;document.getElementById("hubFilter").style.display="none";
+  document.getElementById("fabTodo").classList.remove("on");document.getElementById("fabEat").classList.remove("on");
   const c=REGIONS[leg].color,days=legDays(leg);
   document.querySelector("#scrim .modal").style.borderTopColor=c;
   document.getElementById("hubEye").textContent=`Dec ${days[0]} – ${days[days.length-1]} · ${days.length} day${days.length>1?"s":""}`;
@@ -822,7 +855,33 @@ function initHubMap(){
   setTimeout(()=>{if(hubMap){hubMap.invalidateSize();buildMarkers();}},60);
 }
 
-function closeHub(){scrim.classList.remove("open");clearArc();if(hubMap){hubMap.remove();hubMap=null;}hubMarkers=[];hubSel=null;}
+/* leg-wide food / activity views */
+function filterHTML(kind){
+  const color=kind==="todo"?TODO_C:EAT_C;
+  let rows="";
+  legDays(hubLeg).forEach(d=>{(dayContent(d)[kind]||[]).forEach((it,i)=>{
+    rows+=`<div class="pl-row"><span class="pl-num" style="background:${color}">${it.ico||i+1}</span>
+      <div><div>${it.url?`<a class="it-link" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.name)} ↗</a>`:esc(it.name)}</div>
+      <div class="it-sub">Dec ${d}${it.note?" · "+esc(it.note):""}</div></div></div>`;
+  });});
+  if(!rows)rows=`<div class="dd-empty">No ${kind==="todo"?"activities":"restaurants"} saved for this leg yet — tell Claude and they show up.</div>`;
+  return `<div class="dd-lbl">${kind==="todo"?"◎ All activities":"🍴 All restaurants"} · ${legName(hubLeg)}</div>${rows}`;
+}
+function setFilter(kind){
+  hubFilter=(hubFilter===kind)?null:kind;
+  document.getElementById("fabTodo").classList.toggle("on",hubFilter==="todo");
+  document.getElementById("fabEat").classList.toggle("on",hubFilter==="eat");
+  const ov=document.getElementById("hubFilter");
+  if(hubFilter){ov.innerHTML=filterHTML(hubFilter);ov.scrollTop=0;ov.style.display="block";}
+  else ov.style.display="none";
+  applySelMap();
+}
+document.getElementById("fabTodo").onclick=()=>setFilter("todo");
+document.getElementById("fabEat").onclick=()=>setFilter("eat");
+
+function closeHub(){scrim.classList.remove("open");clearArc();if(hubMap){hubMap.remove();hubMap=null;}hubMarkers=[];hubSel=null;
+  hubFilter=null;document.getElementById("hubFilter").style.display="none";
+  document.getElementById("fabTodo").classList.remove("on");document.getElementById("fabEat").classList.remove("on");}
 document.getElementById("mClose").onclick=closeHub;
 scrim.addEventListener("click",e=>{if(e.target===scrim)closeHub();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeHub();scrimCost.classList.remove("open");}});
