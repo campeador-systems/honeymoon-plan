@@ -295,7 +295,19 @@
   .who-btn.act{background:var(--ink);color:#fffdf6;border-color:var(--ink)}
 
   /* ---- Assistant chat ---- */
-  .chat-card{background:var(--card);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;height:min(72vh,660px);max-width:780px}
+  .chat-fab{position:fixed;right:20px;bottom:84px;z-index:75;width:52px;height:52px;border-radius:50%;background:var(--teal);color:#fffdf6;
+    border:none;font-size:19px;cursor:pointer;box-shadow:0 8px 20px rgba(30,20,10,.35);transition:transform .12s}
+  .chat-fab:hover{transform:scale(1.06)}
+  .chat-panel{display:none;position:fixed;right:20px;bottom:148px;z-index:76;width:min(400px,calc(100vw - 40px));height:min(560px,68dvh);
+    background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 60px rgba(30,20,10,.35);
+    flex-direction:column;overflow:hidden}
+  .chat-panel.open{display:flex}
+  .chat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 6px 10px 14px;border-bottom:1px solid var(--line);
+    font-family:var(--sans);font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-soft)}
+  .chat-head .m-close{position:static;font-size:22px;padding:0 10px}
+  @media(max-width:700px){
+    .chat-panel{right:8px;left:8px;width:auto;bottom:8px;height:76dvh}
+  }
   .chat-log{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:16px;display:flex;flex-direction:column;gap:10px}
   .cb{max-width:86%;padding:9px 12px;border-radius:12px;font-family:var(--sans);font-size:13px;line-height:1.55;overflow-wrap:break-word}
   .cb.me{align-self:flex-end;background:var(--ink);color:#fffdf6;border-bottom-right-radius:4px}
@@ -367,25 +379,23 @@
 
 </div>
 
-<div id="viewChat" style="display:none">
-  <div class="lbl">Trip assistant <span class="hint">screenshots, links, or words — activities &amp; restaurants only</span></div>
-  <div class="chat-card">
-    <div class="chat-log" id="chatLog"></div>
-    <div class="chat-pending" id="chatPending"></div>
-    <div class="chat-row">
-      <button class="chat-attach" id="chatAttach" title="Attach a screenshot">📎</button>
-      <input type="file" id="chatFile" accept="image/*" multiple style="display:none">
-      <textarea id="chatInput" rows="1" placeholder="e.g. add this to Tokyo… (paste screenshots right here)"></textarea>
-      <button class="pl-btn" id="chatSend">Send</button>
-    </div>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head"><span>✨ Trip assistant</span><button class="m-close" id="chatClose">&times;</button></div>
+  <div class="chat-log" id="chatLog"></div>
+  <div class="chat-pending" id="chatPending"></div>
+  <div class="chat-row">
+    <button class="chat-attach" id="chatAttach" title="Attach a screenshot">📎</button>
+    <input type="file" id="chatFile" accept="image/*" multiple style="display:none">
+    <textarea id="chatInput" rows="1" placeholder="Add a place… (paste screenshots here)"></textarea>
+    <button class="pl-btn" id="chatSend">Send</button>
   </div>
 </div>
+<button class="chat-fab" id="chatFab" title="Trip assistant">✨</button>
 
 <div class="fab-wrap">
   <div class="fab-menu" id="fabMenu">
     <button data-view="dash">◧ Dashboard</button>
     <button data-view="links">⧉ Links</button>
-    <button data-view="chat">✨ Assistant</button>
   </div>
   <button class="fab" id="fabBtn" title="Menu">☰</button>
 </div>
@@ -1022,12 +1032,20 @@ document.getElementById("fabBtn").onclick=()=>fabMenu.classList.toggle("open");
 function setView(v){
   document.getElementById("viewDash").style.display=(v==="dash")?"":"none";
   document.getElementById("viewLinks").style.display=(v==="links")?"":"none";
-  document.getElementById("viewChat").style.display=(v==="chat")?"":"none";
   fabMenu.querySelectorAll("button").forEach(x=>x.classList.toggle("act",x.dataset.view===v));
   fabMenu.classList.remove("open");
 }
 fabMenu.querySelectorAll("button").forEach(x=>x.onclick=()=>setView(x.dataset.view));
 document.addEventListener("click",e=>{if(!e.target.closest(".fab-wrap"))fabMenu.classList.remove("open");});
+
+/* ---- Realtime: any DB change refreshes open views ---- */
+let RT=false;
+function subscribeItems(){
+  if(!sb||RT)return;RT=true;
+  sb.channel("items-changes")
+    .on("postgres_changes",{event:"*",schema:"public",table:"items"},async()=>{await fetchItems();refreshOpenHubData();})
+    .subscribe();
+}
 
 /* ---- Auth (email code) ---- */
 const loginScrim=document.getElementById("loginScrim");
@@ -1035,9 +1053,9 @@ async function initAuth(){
   const msg=document.getElementById("loginMsg");
   if(!sb){msg.textContent="Couldn't load the data library — check your connection.";loginScrim.classList.add("open");return;}
   const {data:{session}}=await sb.auth.getSession();
-  if(session){await fetchItems();return;}
+  if(session){await fetchItems();subscribeItems();return;}
   loginScrim.classList.add("open");
-  sb.auth.onAuthStateChange(async(ev,sess)=>{if(sess){loginScrim.classList.remove("open");await fetchItems();}});
+  sb.auth.onAuthStateChange(async(ev,sess)=>{if(sess){loginScrim.classList.remove("open");await fetchItems();subscribeItems();}});
 }
 let LOGIN_EMAIL=null;
 document.querySelectorAll(".who-btn").forEach(b=>b.onclick=async()=>{
@@ -1059,7 +1077,7 @@ document.getElementById("loginVerify").onclick=async()=>{
   if(error){msg.textContent="That code didn't work — try again or resend.";return;}
   msg.textContent="";
   loginScrim.classList.remove("open");
-  await fetchItems();
+  await fetchItems();subscribeItems();
 };
 
 /* ---- Assistant chat ---- */
@@ -1113,6 +1131,8 @@ async function sendChat(){
     chatBubble("bot",'<span style="color:#9d174d">'+esc(String(err&&err.message?err.message:err))+"</span>");
   }
 }
+document.getElementById("chatFab").onclick=()=>document.getElementById("chatPanel").classList.toggle("open");
+document.getElementById("chatClose").onclick=()=>document.getElementById("chatPanel").classList.remove("open");
 document.getElementById("chatSend").onclick=sendChat;
 document.getElementById("chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}});
 chatBubble("bot","Hi! Send a screenshot or a Google Maps link (or just describe a place) and I'll add it to the trip — activities and restaurants, onto the right leg or day. I can also move or remove them. Anything else is for Alejandro to change.");
