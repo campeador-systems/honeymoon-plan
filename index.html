@@ -1109,9 +1109,12 @@ document.getElementById("chatInput").addEventListener("paste",e=>{
 async function sendChat(){
   const inp=document.getElementById("chatInput"),text=inp.value.trim();
   if(!text&&!PENDING.length)return;
-  const content=[...PENDING.map(im=>({type:"image",source:im})),...(text?[{type:"text",text:text}]:[])];
+  const imgs=PENDING.map(im=>({type:"image",source:im}));
+  const contentNow=[...imgs,...(text?[{type:"text",text:text}]:[])];
+  const contentStored=[...(imgs.length?[{type:"text",text:"[screenshot was attached here]"}]:[]),...(text?[{type:"text",text:text}]:[])];
   chatBubble("me",(PENDING.length?`<div class="cb-imgs">${PENDING.map(im=>`<img src="data:${im.media_type};base64,${im.data}">`).join("")}</div>`:"")+(text?esc(text):""));
-  CHAT.push({role:"user",content:content});
+  const outgoing=[...CHAT.slice(-8),{role:"user",content:contentNow}];
+  CHAT.push({role:"user",content:contentStored});
   PENDING=[];renderPending();inp.value="";
   const typing=chatBubble("bot typing","…");
   try{
@@ -1119,7 +1122,7 @@ async function sendChat(){
     if(!session)throw new Error("You're signed out — reload the page.");
     const r=await fetch(SUPA_URL+"/functions/v1/assistant",{method:"POST",
       headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token,"apikey":SUPA_KEY},
-      body:JSON.stringify({messages:CHAT.slice(-24)})});
+      body:JSON.stringify({messages:outgoing})});
     const out=await r.json().catch(()=>({}));
     typing.remove();
     if(!r.ok)throw new Error(out.error||("The assistant hit an error (HTTP "+r.status+")."));
