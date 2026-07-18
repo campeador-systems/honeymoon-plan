@@ -91,12 +91,12 @@
   .cell.travel{background:repeating-linear-gradient(-45deg,var(--tint) 0 9px,color-mix(in srgb,var(--c) 13%,var(--card)) 9px 18px)}
   .cell .city{font-family:var(--serif);font-weight:600;font-size:15.5px;line-height:1.15;letter-spacing:-.01em;
     color:var(--c);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cell .move,.ag-row .move{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;max-width:100%;margin-top:6px;
+  .cell .move,.ag-row .move,.dc-main .move{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;max-width:100%;margin-top:6px;
     background:var(--c);color:#fff;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.03em;
     padding:3px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cell .hotel,.ag-row .hotel{margin-top:6px;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-soft);
+  .cell .hotel,.ag-row .hotel,.dc-main .hotel{margin-top:6px;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-soft);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cell .hotel.tbd,.ag-row .hotel.tbd{font-weight:500;font-style:italic;color:var(--faint)}
+  .cell .hotel.tbd,.ag-row .hotel.tbd,.dc-main .hotel.tbd{font-weight:500;font-style:italic;color:var(--faint)}
   .cell .sub{margin-top:auto;padding-top:5px;font-family:var(--sans);font-size:9.5px;font-weight:500;
     letter-spacing:.03em;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
@@ -152,9 +152,33 @@
   .fld textarea{width:100%;min-height:44px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-family:inherit;font-size:14.5px;color:var(--ink);background:#fffef9;line-height:1.5}
   .fld textarea:focus{outline:none;border-color:var(--rule);background:#fff}
 
-  /* ---- Day map ---- */
-  #dayMapWrap{margin-bottom:16px}
-  #dayMap{height:260px;border-radius:10px;border:1px solid var(--line);background:#e4edee}
+  /* ---- Leg hub modal ---- */
+  .modal-hub{max-width:none;width:min(1380px,96vw);height:92vh;max-height:92vh;display:flex;overflow:hidden}
+  .hub-map{flex:1.05;min-width:0;position:relative;background:#e4edee}
+  #hubMap{position:absolute;inset:0}
+  .hub-side{flex:1;min-width:0;display:flex;flex-direction:column;border-left:1px solid var(--line)}
+  .hub-head{padding:16px 20px 12px;border-bottom:1px solid var(--line);position:relative}
+  .hub-cards{flex:1;overflow-y:auto;padding:14px 16px 22px;display:flex;flex-direction:column;gap:10px}
+  .dcard{--tint:color-mix(in srgb,var(--c) 7%,var(--card));border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));
+    border-left:4px solid var(--c);border-radius:11px;background:var(--card)}
+  .dcard.sel{background:var(--tint);box-shadow:0 8px 20px rgba(60,40,20,.12)}
+  .dc-head{display:flex;gap:12px;padding:10px 12px;cursor:pointer;align-items:flex-start}
+  .dc-date{flex:0 0 36px;text-align:center;padding-top:1px}
+  .dc-date b{display:block;font-family:var(--sans);font-size:17px;font-weight:700;color:color-mix(in srgb,var(--c) 65%,var(--ink));line-height:1.1}
+  .dc-date span{font-family:var(--sans);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--faint)}
+  .dc-main{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start}
+  .dc-city{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--c);letter-spacing:-.01em;line-height:1.2}
+  .dc-sub{font-family:var(--sans);font-size:9.5px;color:var(--faint);margin-top:3px}
+  .dc-car{font-family:var(--sans);color:var(--faint);font-size:12px;padding-top:4px;transition:transform .15s}
+  .dcard.sel .dc-car{transform:rotate(180deg)}
+  .dc-body{display:none;padding:4px 14px 14px;border-top:1px dashed var(--line)}
+  .dcard.sel .dc-body{display:block}
+  @media(max-width:860px){
+    .scrim{padding:0}
+    .modal-hub{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;flex-direction:column}
+    .hub-map{flex:0 0 36vh}
+    .hub-side{border-left:none}
+  }
   .pin{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;
     font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;border:2px solid #fffdf6;box-shadow:0 2px 6px rgba(0,0,0,.35)}
   .pl-row{display:flex;align-items:center;gap:8px;font-family:var(--sans);font-size:12px;color:var(--ink-soft);
@@ -230,10 +254,13 @@
 
 </div>
 
-<div class="scrim" id="scrim"><div class="modal">
-  <div class="m-head"><button class="m-close" id="mClose">&times;</button>
-    <div class="m-eyebrow" id="mEye"></div><div class="m-city" id="mCity"></div><div class="m-sub" id="mSub"></div></div>
-  <div class="m-body" id="mBody"></div>
+<div class="scrim" id="scrim"><div class="modal modal-hub">
+  <div class="hub-map"><div id="hubMap"></div></div>
+  <div class="hub-side">
+    <div class="hub-head"><button class="m-close" id="mClose">&times;</button>
+      <div class="m-eyebrow" id="hubEye"></div><div class="m-city" id="hubCity"></div><div class="m-sub" id="hubSub"></div></div>
+    <div class="hub-cards" id="hubCards"></div>
+  </div>
 </div></div>
 
 <div class="scrim" id="scrimCost"><div class="modal modal-wide">
@@ -384,10 +411,10 @@ function renderRibbon(){
   r.innerHTML=LEGS.map(L=>{
     if(L.kind==="cap") return `<div class="rib-cap">${L.short}</div>`;
     const c=REGIONS[L.leg].color, tbd=/TBD/.test(L.hotel);
-    return `<div class="rib-seg" style="background:${c};flex-grow:${L.nights}" data-day="${L.d1}" title="Open Dec ${L.d1}">
+    return `<div class="rib-seg" style="background:${c};flex-grow:${L.nights}" data-leg="${L.leg}" title="Open ${esc(L.city)}">
       <b>${esc(L.city)}</b><span>Dec ${L.d1}–${L.d2+1} · ${L.nights} nights</span><i>${tbd?"⌂ hotel TBD":"⌂ "+esc(L.hotel)}</i></div>`;
   }).join("");
-  r.querySelectorAll(".rib-seg").forEach(s=>s.onclick=()=>openDay(+s.dataset.day));
+  r.querySelectorAll(".rib-seg").forEach(s=>s.onclick=()=>openHub(s.dataset.leg));
 }
 
 /* ---- Legend ---- */
@@ -441,9 +468,9 @@ function renderAgenda(){
   a.querySelectorAll(".ag-row").forEach(r=>r.onclick=()=>openDay(+r.dataset.day));
 }
 
-/* ---- Day map (Leaflet) ---- */
-const CITY={singapore:{c:[1.2966,103.8522],z:13},thailand:{c:[9.512,100.043],z:11},tokyo:{c:[35.6812,139.7671],z:12},kyoto:{c:[35.0116,135.7681],z:13}};
-const HOTELGEO={ // hotel pin coords (approximate — adjust here if off)
+/* ---- Leg hub: full map + day cards ---- */
+const CITY={transit:{c:[37.6213,-122.379],z:11},singapore:{c:[1.2966,103.8522],z:13},thailand:{c:[9.512,100.043],z:11},tokyo:{c:[35.6812,139.7671],z:12},kyoto:{c:[35.0116,135.7681],z:13}};
+const HOTELGEO={ // hotel pin coords — adjust here if off
   singapore:{name:"Raffles Singapore",lat:1.2949,lng:103.8544},
   thailand:{name:"Banyan Tree Koh Samui",lat:9.47285,lng:100.06933},
 };
@@ -451,74 +478,124 @@ const PLACES_KEY="planA-places";
 let PLACES;
 try{PLACES=JSON.parse(localStorage.getItem(PLACES_KEY))||{};}catch(e){PLACES={};}
 function savePlaces(){localStorage.setItem(PLACES_KEY,JSON.stringify(PLACES));showSaved();}
-let dayMap=null;
-function mapSectionHTML(d,info){
-  if(!CITY[info.leg]) return "";
-  return `<div id="dayMapWrap"><div id="dayMap"></div><div id="plList"></div>
-    <div class="pl-add"><input class="n" id="plName" placeholder="Place name">
-    <input class="c" id="plCoord" placeholder="lat, lng"><button class="pl-btn" id="plAdd">Add pin</button></div>
-    <div class="map-note">Coords: in Google Maps, long-press a spot &rarr; tap the numbers &rarr; copy &rarr; paste here.</div></div>`;
-}
-function renderPlaceList(d){
-  const el=document.getElementById("plList"); if(!el)return;
-  el.innerHTML=(PLACES[d]||[]).map((pl,i)=>`<div class="pl-row"><span class="pl-num">${i+1}</span><span>${esc(pl.name)}</span>
-    <button class="pl-del" data-i="${i}" title="Remove pin">&times;</button></div>`).join("");
-  el.querySelectorAll(".pl-del").forEach(b=>b.onclick=()=>{PLACES[d].splice(+b.dataset.i,1);savePlaces();renderPlaceList(d);drawDayMap(d);});
-}
-function drawDayMap(d){
-  const info=PLAN.days[d], cfg=CITY[info.leg];
-  const el=document.getElementById("dayMap"); if(!el||!cfg)return;
-  if(typeof L==="undefined"){el.innerHTML='<div class="map-note" style="padding:12px">Map needs an internet connection to load.</div>';return;}
-  if(dayMap){dayMap.remove();dayMap=null;}
-  dayMap=L.map(el,{scrollWheelZoom:false}).setView(cfg.c,cfg.z);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{attribution:"&copy; OpenStreetMap &copy; CARTO",subdomains:"abcd",maxZoom:20}).addTo(dayMap);
-  const mkIcon=(html,bg)=>L.divIcon({className:"",html:`<div class="pin" style="background:${bg}">${html}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
-  const pts=[];
-  const hg=HOTELGEO[info.leg];
-  if(hg){L.marker([hg.lat,hg.lng],{icon:mkIcon("⌂",REGIONS[info.leg].color)}).addTo(dayMap).bindPopup(esc(hg.name));pts.push([hg.lat,hg.lng]);}
-  (PLACES[d]||[]).forEach((pl,i)=>{L.marker([pl.lat,pl.lng],{icon:mkIcon(String(i+1),"#3730a3")}).addTo(dayMap).bindPopup(esc(pl.name));pts.push([pl.lat,pl.lng]);});
-  if(pts.length>1)dayMap.fitBounds(pts,{padding:[36,36]});
-  else if(pts.length===1)dayMap.setView(pts[0],14);
-  setTimeout(()=>{if(dayMap)dayMap.invalidateSize();},60);
-}
-function wireMapUI(d){
-  const btn=document.getElementById("plAdd"); if(!btn)return;
-  btn.onclick=()=>{
-    const name=document.getElementById("plName").value.trim();
-    const m=document.getElementById("plCoord").value.trim().match(/(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)/);
-    if(!name||!m)return;
-    (PLACES[d]=PLACES[d]||[]).push({name:name,lat:+m[1],lng:+m[2]});
-    savePlaces();
-    document.getElementById("plName").value="";document.getElementById("plCoord").value="";
-    renderPlaceList(d);drawDayMap(d);
-  };
-  renderPlaceList(d);drawDayMap(d);
-}
 
-/* ---- Day modal ---- */
 const scrim=document.getElementById("scrim");
 const FIELDS=[["transport","✈︎ Transport","Flights, trains, transfers, times…"],["stay","⌂ Hotel / Stay","Where you're sleeping, check-in / out…"],["plans","◎ Plans & itinerary","Sights, tours, bookings…"],["food","☕ Food & reservations","Restaurants, reservations…"],["notes","✎ Notes","Tickets, packing, reminders…"]];
-function openDay(d){
-  const info=PLAN.days[d], c=REGIONS[info.leg].color;
-  document.querySelector("#scrim .modal").style.borderTopColor=c;
-  document.getElementById("mEye").textContent=`${WD_LONG[wdOf(d)]} · December ${d}`;
-  const ce=document.getElementById("mCity"); ce.textContent=info.city; ce.style.color=c;
-  document.getElementById("mSub").innerHTML=`<span style="color:${c};font-weight:700">${REGIONS[info.leg].label}</span><span>${esc(info.nights)}</span>`;
-  document.getElementById("mBody").innerHTML=mapSectionHTML(d,info)+FIELDS.map(f=>{
+const GREY="#b3aa99";
+let hubMap=null,hubMarkers=[],hubLeg=null,hubSel=null;
+const legDays=leg=>Object.keys(PLAN.days).map(Number).filter(d=>PLAN.days[d].leg===leg).sort((a,b)=>a-b);
+const mkPin=(label,bg)=>L.divIcon({className:"",html:`<div class="pin" style="background:${bg}">${label}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
+
+function openDay(d){ openHub(PLAN.days[d].leg,d); }
+
+function cardHTML(d){
+  const info=PLAN.days[d], ht=hotelFor(d,info);
+  const head=`<div class="dc-head" data-d="${d}">
+    <div class="dc-date"><b>${d}</b><span>${WD_SHORT[wdOf(d)]}</span></div>
+    <div class="dc-main"><div class="dc-city">${esc(info.city)} <span class="ag-ico">${info.ico}</span></div>
+      ${info.move?`<span class="move">${modeGlyph(info.move.mode)} ${esc(info.move.brand)}</span>`:""}
+      ${ht?`<div class="hotel${ht.tbd?" tbd":""}">⌂ ${esc(ht.name)}</div>`:""}
+      <div class="dc-sub">${esc(info.nights)}</div></div>
+    <div class="dc-car">▾</div></div>`;
+  const flds=FIELDS.map(f=>{
     const saved=localStorage.getItem(noteKey(d,f[0]));
     const val=(saved!=null)?saved:((info.seed&&info.seed[f[0]])||"");
-    return `<div class="fld"><label>${f[1]}</label><textarea data-k="${f[0]}" placeholder="${f[2]}">${esc(val)}</textarea></div>`;
+    return `<div class="fld"><label>${f[1]}</label><textarea data-d="${d}" data-k="${f[0]}" placeholder="${f[2]}">${esc(val)}</textarea></div>`;
   }).join("");
-  document.querySelectorAll("#mBody textarea").forEach(ta=>{
-    const grow=()=>{ta.style.height="auto";ta.style.height=(ta.scrollHeight+2)+"px";}; grow();
-    ta.addEventListener("input",()=>{grow();localStorage.setItem(noteKey(d,ta.dataset.k),ta.value);showSaved();});
-  });
-  scrim.classList.add("open");
-  wireMapUI(d);
+  const places=`<div class="fld"><label>◉ Map pins</label><div class="pl-list" data-d="${d}"></div>
+    <div class="pl-add"><input class="n" data-pn="${d}" placeholder="Place name"><input class="c" data-pc="${d}" placeholder="lat, lng"><button class="pl-btn" data-pa="${d}">Add pin</button></div>
+    <div class="map-note">Coords: in Google Maps, long-press a spot → tap the numbers → copy → paste.</div></div>`;
+  return `<div class="dcard" id="dcard-${d}" style="--c:${REGIONS[info.leg].color}">${head}<div class="dc-body">${flds}${places}</div></div>`;
 }
-document.getElementById("mClose").onclick=()=>scrim.classList.remove("open");
-scrim.addEventListener("click",e=>{if(e.target===scrim)scrim.classList.remove("open");});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){scrim.classList.remove("open");scrimCost.classList.remove("open");}});
+
+function renderPlaceLists(){
+  document.querySelectorAll(".pl-list").forEach(el=>{
+    const d=+el.dataset.d;
+    el.innerHTML=(PLACES[d]||[]).map((pl,i)=>`<div class="pl-row"><span class="pl-num">${i+1}</span><span>${esc(pl.name)}</span>
+      <button class="pl-del" data-d="${d}" data-i="${i}" title="Remove pin">&times;</button></div>`).join("")||`<div class="map-note">No pins yet for this day.</div>`;
+    el.querySelectorAll(".pl-del").forEach(b=>b.onclick=()=>{PLACES[+b.dataset.d].splice(+b.dataset.i,1);savePlaces();renderPlaceLists();buildMarkers();});
+  });
+}
+
+function buildMarkers(){
+  if(!hubMap)return;
+  hubMarkers.forEach(x=>x.m.remove());hubMarkers=[];
+  const hg=HOTELGEO[hubLeg];
+  if(hg){const m=L.marker([hg.lat,hg.lng],{icon:mkPin("⌂",REGIONS[hubLeg].color),zIndexOffset:500}).addTo(hubMap).bindPopup(esc(hg.name));hubMarkers.push({day:null,m:m,label:"⌂"});}
+  legDays(hubLeg).forEach(d=>{(PLACES[d]||[]).forEach((pl,i)=>{
+    const m=L.marker([pl.lat,pl.lng],{icon:mkPin(String(i+1),"#3730a3")}).addTo(hubMap).bindPopup(`${esc(pl.name)} — Dec ${d}`);
+    hubMarkers.push({day:d,m:m,label:String(i+1)});
+  });});
+  refreshPins();
+  const pts=hubMarkers.map(x=>x.m.getLatLng());
+  if(pts.length>1)hubMap.fitBounds(pts,{padding:[46,46]});
+  else if(pts.length===1)hubMap.setView(pts[0],14);
+}
+
+function refreshPins(){
+  hubMarkers.forEach(x=>{
+    const active=(x.day==null)||hubSel==null||x.day===hubSel;
+    const bg=(x.day==null)?REGIONS[hubLeg].color:(active?"#3730a3":GREY);
+    x.m.setIcon(mkPin(x.label,bg));
+    x.m.setZIndexOffset(x.day==null?500:(active?400:0));
+  });
+}
+
+function selectDay(d){
+  hubSel=(hubSel===d)?null:d;
+  document.querySelectorAll(".dcard").forEach(c=>c.classList.toggle("sel",+c.id.slice(6)===hubSel));
+  refreshPins();
+  if(hubSel!=null){
+    document.querySelectorAll(`#dcard-${hubSel} textarea`).forEach(ta=>{ta.style.height="auto";ta.style.height=(ta.scrollHeight+2)+"px";});
+    const el=document.getElementById("dcard-"+hubSel);
+    if(el)el.scrollIntoView({block:"nearest",behavior:"smooth"});
+  }
+}
+
+function openHub(leg,selDay){
+  hubLeg=leg;hubSel=null;
+  const c=REGIONS[leg].color,days=legDays(leg);
+  document.querySelector("#scrim .modal").style.borderTopColor=c;
+  document.getElementById("hubEye").textContent=`Dec ${days[0]} – ${days[days.length-1]} · ${days.length} day${days.length>1?"s":""}`;
+  const ce=document.getElementById("hubCity");ce.textContent=REGIONS[leg].label.split(",")[0];ce.style.color=c;
+  const hg=HOTELGEO[leg];
+  document.getElementById("hubSub").innerHTML=`<span style="color:${c};font-weight:700">${REGIONS[leg].label}</span><span>${hg?"⌂ "+esc(hg.name):(leg==="transit"?"":"⌂ Hotel TBD")}</span>`;
+  document.getElementById("hubCards").innerHTML=days.map(cardHTML).join("");
+  document.querySelectorAll(".dc-head").forEach(h=>h.onclick=()=>selectDay(+h.dataset.d));
+  document.querySelectorAll(".dc-body textarea").forEach(ta=>{
+    const grow=()=>{ta.style.height="auto";ta.style.height=(ta.scrollHeight+2)+"px";};grow();
+    ta.addEventListener("input",()=>{grow();localStorage.setItem(noteKey(+ta.dataset.d,ta.dataset.k),ta.value);showSaved();});
+  });
+  document.querySelectorAll("[data-pa]").forEach(btn=>btn.onclick=()=>{
+    const d=+btn.dataset.pa;
+    const nameEl=document.querySelector(`[data-pn="${d}"]`),coordEl=document.querySelector(`[data-pc="${d}"]`);
+    const name=nameEl.value.trim(),m=coordEl.value.trim().match(/(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)/);
+    if(!name||!m)return;
+    (PLACES[d]=PLACES[d]||[]).push({name:name,lat:+m[1],lng:+m[2]});
+    savePlaces();nameEl.value="";coordEl.value="";
+    renderPlaceLists();buildMarkers();
+  });
+  renderPlaceLists();
+  scrim.classList.add("open");
+  initHubMap();
+  if(selDay!=null)selectDay(selDay);
+}
+
+function initHubMap(){
+  const el=document.getElementById("hubMap"),cfg=CITY[hubLeg];
+  if(hubMap){hubMap.remove();hubMap=null;}
+  hubMarkers=[];
+  if(typeof L==="undefined"||!cfg){el.innerHTML='<div class="map-note" style="padding:14px">Map needs an internet connection to load.</div>';return;}
+  el.innerHTML="";
+  hubMap=L.map(el).setView(cfg.c,cfg.z);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{attribution:"&copy; OpenStreetMap &copy; CARTO",subdomains:"abcd",maxZoom:20}).addTo(hubMap);
+  setTimeout(()=>{if(hubMap){hubMap.invalidateSize();buildMarkers();}},60);
+}
+
+function closeHub(){scrim.classList.remove("open");if(hubMap){hubMap.remove();hubMap=null;}hubMarkers=[];}
+document.getElementById("mClose").onclick=closeHub;
+scrim.addEventListener("click",e=>{if(e.target===scrim)closeHub();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeHub();scrimCost.classList.remove("open");}});
 
 /* ---- Cost tracker ---- */
 let EXP;
