@@ -1,0 +1,6 @@
+project_id = "kfjpagrtfcwqhofjlenz"
+
+[functions.assistant]
+# The function does its own auth (Supabase session check on every request).
+# Platform-level JWT verification must stay off or browser CORS preflights fail.
+verify_jwt = false
