@@ -156,8 +156,10 @@
   .modal-hub{max-width:none;width:min(1380px,96vw);height:92vh;max-height:92vh;display:flex;overflow:hidden}
   .hub-map{flex:1.05;min-width:0;position:relative;background:#e4edee}
   #hubMap{position:absolute;inset:0}
-  .hub-side{flex:1;min-width:0;display:flex;flex-direction:column;border-left:1px solid var(--line)}
-  .hub-head{padding:16px 20px 12px;border-bottom:1px solid var(--line);position:relative}
+  .hub-side{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;border-left:1px solid var(--line)}
+  .hub-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 14px;padding:12px 46px 10px 20px;border-bottom:1px solid var(--line);position:relative}
+  .hub-head .m-city{font-size:22px;margin:0}
+  .hub-head .m-sub{margin-top:0}
   .hub-cards{flex:1;overflow-y:auto;padding:14px 16px 22px;display:flex;flex-direction:column;gap:10px}
   .dcard{--tint:color-mix(in srgb,var(--c) 7%,var(--card));border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));
     border-left:4px solid var(--c);border-radius:11px;background:var(--card)}
@@ -176,7 +178,7 @@
   @media(max-width:860px){
     .scrim{padding:0}
     .modal-hub{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;flex-direction:column}
-    .hub-map{flex:0 0 36vh}
+    .hub-map{flex:0 0 36dvh}
     .hub-side{border-left:none}
   }
   .pin{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;
@@ -227,10 +229,34 @@
   }
   #saveflash{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--teal);color:#fff;font-family:var(--sans);font-size:12px;padding:7px 16px;border-radius:20px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:70}
   #saveflash.show{opacity:1}
+
+  /* ---- FAB + views ---- */
+  .fab-wrap{position:fixed;right:20px;bottom:20px;z-index:55;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+  .fab{width:52px;height:52px;border-radius:50%;background:var(--ink);color:#fffdf6;border:none;font-size:19px;cursor:pointer;
+    box-shadow:0 8px 20px rgba(30,20,10,.35);transition:transform .12s}
+  .fab:hover{transform:scale(1.06)}
+  .fab-menu{display:none;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 12px 30px rgba(30,20,10,.22);overflow:hidden;min-width:160px}
+  .fab-menu.open{display:flex}
+  .fab-menu button{background:none;border:none;text-align:left;padding:11px 16px;font-family:var(--sans);font-size:13px;font-weight:600;
+    color:var(--ink-soft);cursor:pointer;border-bottom:1px solid var(--line)}
+  .fab-menu button:last-child{border-bottom:none}
+  .fab-menu button:hover{background:var(--chip)}
+  .fab-menu button.act{color:var(--teal)}
+  .buckets{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;align-items:start}
+  .bucket{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--teal);border-radius:12px;padding:14px 16px}
+  .bucket h3{font-family:var(--serif);font-style:italic;font-weight:600;font-size:18px;margin:0 0 10px;letter-spacing:-.01em}
+  .lk-btn{display:flex;align-items:center;gap:8px;text-decoration:none;background:var(--chip);border:1px solid var(--line);
+    border-radius:8px;padding:8px 11px;margin-bottom:7px;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+  .lk-btn:last-child{margin-bottom:0}
+  .lk-btn:hover{background:#e9dfc9;color:var(--ink)}
+  .lk-btn::after{content:"↗";margin-left:auto;color:var(--faint)}
 </style>
 </head>
 <body>
 <div class="wrap">
+
+<div id="viewDash">
 
   <div class="ribbon" id="ribbon"></div>
 
@@ -254,11 +280,26 @@
 
 </div>
 
+<div id="viewLinks" style="display:none">
+  <div class="lbl">Shared links</div>
+  <div class="buckets" id="buckets"></div>
+</div>
+
+</div>
+
+<div class="fab-wrap">
+  <div class="fab-menu" id="fabMenu">
+    <button data-view="dash">◧ Dashboard</button>
+    <button data-view="links">⧉ Links</button>
+  </div>
+  <button class="fab" id="fabBtn" title="Menu">☰</button>
+</div>
+
 <div class="scrim" id="scrim"><div class="modal modal-hub">
   <div class="hub-map"><div id="hubMap"></div></div>
   <div class="hub-side">
     <div class="hub-head"><button class="m-close" id="mClose">&times;</button>
-      <div class="m-eyebrow" id="hubEye"></div><div class="m-city" id="hubCity"></div><div class="m-sub" id="hubSub"></div></div>
+      <div class="m-city" id="hubCity"></div><div class="m-eyebrow" id="hubEye"></div><div class="m-sub" id="hubSub"></div></div>
     <div class="hub-cards" id="hubCards"></div>
   </div>
 </div></div>
@@ -559,7 +600,7 @@ function openHub(leg,selDay){
   document.getElementById("hubEye").textContent=`Dec ${days[0]} – ${days[days.length-1]} · ${days.length} day${days.length>1?"s":""}`;
   const ce=document.getElementById("hubCity");ce.textContent=REGIONS[leg].label.split(",")[0];ce.style.color=c;
   const hg=HOTELGEO[leg];
-  document.getElementById("hubSub").innerHTML=`<span style="color:${c};font-weight:700">${REGIONS[leg].label}</span><span>${hg?"⌂ "+esc(hg.name):(leg==="transit"?"":"⌂ Hotel TBD")}</span>`;
+  document.getElementById("hubSub").textContent=hg?"⌂ "+hg.name:(leg==="transit"?"":"⌂ Hotel TBD");
   document.getElementById("hubCards").innerHTML=days.map(cardHTML).join("");
   document.querySelectorAll(".dc-head").forEach(h=>h.onclick=()=>selectDay(+h.dataset.d));
   document.querySelectorAll(".dc-body textarea").forEach(ta=>{
@@ -642,6 +683,45 @@ function renderCostSummary(){
   }).join("");
 }
 
+/* ---- Views + FAB ---- */
+const LINKS=[
+  {title:"Tokyo hotel options (Dec 20–25)",links:[
+    {label:"Keio Plaza Hotel — ~$1,997",url:"https://www.expedia.com/Tokyo-Hotels-Keio-Plaza-Hotel-Tokyo.h15215.Hotel-Information?chkin=2026-12-20&chkout=2026-12-25&x_pwa=1&rfrr=HSR&pwa_ts=1784249843020&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=3593&destination=Tokyo%2C+Tokyo+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=553248633981698851&latLong=35.681143%2C139.767208&sort=RECOMMENDED&top_dp=1997&top_cur=USD&userIntent=&selectedRoomType=200818141&selectedRatePlan=204110417&categorySearch=any_option&searchId=a28996c4-57aa-42d7-930a-8d26cb5d6b54"},
+    {label:"Hyatt Regency Tokyo — ~$2,194",url:"https://www.expedia.com/Tokyo-Hotels-Hyatt-Regency-Tokyo.h18119.Hotel-Information?chkin=2026-12-20&chkout=2026-12-25&x_pwa=1&rfrr=HSR&pwa_ts=1784249843059&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=3593&destination=Tokyo%2C%20Tokyo%20Prefecture%2C%20Japan&destType=MARKET&neighborhoodId=553248633981698851&latLong=35.681143%2C139.767208&sort=RECOMMENDED&top_dp=2194&top_cur=USD&userIntent=&selectedRoomType=325479363&selectedRatePlan=398195775&categorySearch=any_option&searchId=a28996c4-57aa-42d7-930a-8d26cb5d6b54&pwaThumbnailDialog=thumbnail-gallery"},
+    {label:"Hotel Rose Garden Shinjuku — ~$1,102",url:"https://www.expedia.com/Tokyo-Hotels-Hotel-Rose-Garden-Shinjuku.h1077321.Hotel-Information?chkin=2026-12-20&chkout=2026-12-25&x_pwa=1&rfrr=HSR&pwa_ts=1784249843208&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=3593&destination=Tokyo%2C+Tokyo+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=553248633981698851&latLong=35.681143%2C139.767208&sort=RECOMMENDED&top_dp=1102&top_cur=USD&userIntent=&selectedRoomType=323728282&selectedRatePlan=392631056&categorySearch=any_option&searchId=a28996c4-57aa-42d7-930a-8d26cb5d6b54"},
+    {label:"BESPOKE Hotel Shinjuku — ~$1,198",url:"https://www.expedia.com/Tokyo-Hotels-BESPOKE-HOTEL-Shinjuku.h31552304.Hotel-Information?chkin=2026-12-20&chkout=2026-12-25&x_pwa=1&rfrr=HSR&pwa_ts=1784249843127&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=3593&destination=Tokyo%2C+Tokyo+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=6155217&latLong=35.681143%2C139.767208&sort=RECOMMENDED&top_dp=1198&top_cur=USD&userIntent=&selectedRoomType=324123546&selectedRatePlan=393758474&categorySearch=any_option&searchId=a28996c4-57aa-42d7-930a-8d26cb5d6b54"},
+    {label:"Here Shinjuku — ~$1,756",url:"https://www.expedia.com/Tokyo-Hotels-Here-SHINJUKU.h109391812.Hotel-Information?chkin=2026-12-20&chkout=2026-12-25&x_pwa=1&rfrr=HSR&pwa_ts=1784249843225&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=3593&destination=Tokyo%2C+Tokyo+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=179168&latLong=35.681143%2C139.767208&sort=RECOMMENDED&top_dp=1756&top_cur=USD&userIntent=&selectedRoomType=325721049&selectedRatePlan=399092102&categorySearch=any_option&searchId=a28996c4-57aa-42d7-930a-8d26cb5d6b54"},
+    {label:"Hilton Tokyo — ~$1,949",url:"https://www.expedia.com/Tokyo-Hotels-Hilton-Tokyo.h22597.Hotel-Information?chkin=2026-12-20&chkout=2026-12-25&x_pwa=1&rfrr=HSR&pwa_ts=1784249843042&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=3593&destination=Tokyo%2C+Tokyo+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=553248633981698851&latLong=35.681143%2C139.767208&sort=RECOMMENDED&top_dp=1949&top_cur=USD&userIntent=&selectedRoomType=416797&selectedRatePlan=266277895&categorySearch=any_option&searchId=a28996c4-57aa-42d7-930a-8d26cb5d6b54"},
+    {label:"Sequence Miyashita Park — ~$1,358",url:"https://www.expedia.com/Tokyo-Hotels-Sequence-MIYASHITA-PARK.h46302111.Hotel-Information?chkin=2026-12-20&chkout=2026-12-25&x_pwa=1&rfrr=HSR&pwa_ts=1784249843199&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=3593&destination=Tokyo%2C+Tokyo+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=553248635976007522&latLong=35.681143%2C139.767208&sort=RECOMMENDED&top_dp=1358&top_cur=USD&userIntent=&selectedRoomType=229820436&selectedRatePlan=410467645&categorySearch=any_option&searchId=a28996c4-57aa-42d7-930a-8d26cb5d6b54"},
+    {label:"Hotel Amanek Kabukicho — ~$1,253",url:"https://www.expedia.com/Tokyo-Hotels-Hotel-Amanek-Shinjuku-Kabukicho.h90095159.Hotel-Information?chkin=2026-12-20&chkout=2026-12-25&x_pwa=1&rfrr=HSR&pwa_ts=1784249843131&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=3593&destination=Tokyo%2C+Tokyo+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=6155217&latLong=35.681143%2C139.767208&sort=RECOMMENDED&top_dp=1253&top_cur=USD&userIntent=&selectedRoomType=321513882&selectedRatePlan=389241940&categorySearch=any_option&searchId=a28996c4-57aa-42d7-930a-8d26cb5d6b54"},
+    {label:"Mitsui Garden Jingugaien Premier — ~$1,514",url:"https://www.expedia.com/Tokyo-Hotels-Mitsui-Garden-Hotel-Jingugaien-Tokyo-Premier.h36133857.Hotel-Information?chkin=2026-12-20&chkout=2026-12-25&x_pwa=1&rfrr=HSR&pwa_ts=1784249843023&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=3593&destination=Tokyo%2C+Tokyo+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=179168&latLong=35.681143%2C139.767208&sort=RECOMMENDED&top_dp=1514&top_cur=USD&userIntent=&selectedRoomType=DBL.QN-1&selectedRatePlan=20261220%7C20261225%7CW%7C284%7C727151%7CDBL.QN-1%7CBAR-OFFER-RO%7CRO%7C%7C1%7E2%7E0%7C%7CN%7C%7CB2C&categorySearch=any_option&searchId=a28996c4-57aa-42d7-930a-8d26cb5d6b54"},
+  ]},
+  {title:"Kyoto hotel options (Dec 25–30)",links:[
+    {label:"Mogana — ~$1,036",url:"https://www.expedia.com/Kyoto-Hotels-Mogana.h36342648.Hotel-Information?chkin=2026-12-25&chkout=2026-12-30&x_pwa=1&rfrr=HSR&pwa_ts=1784250968088&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=10323&destination=Kyoto%2C+Kyoto+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=6204517&latLong=35.011636%2C135.768029&sort=RECOMMENDED&top_dp=1036&top_cur=USD&userIntent=&selectedRoomType=214214801&selectedRatePlan=387856220&categorySearch=any_option&searchId=96bca853-4e42-4e61-af6f-e97db4e43e89"},
+    {label:"Good Nature Hotel — ~$1,460",url:"https://www.expedia.com/Kyoto-Hotels-Good-Nature-Hotel-Kyoto.h37234951.Hotel-Information?chkin=2026-12-25&chkout=2026-12-30&x_pwa=1&rfrr=HSR&pwa_ts=1784250968042&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=10323&destination=Kyoto%2C+Kyoto+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=6204517&latLong=35.011636%2C135.768029&sort=RECOMMENDED&top_dp=1460&top_cur=USD&userIntent=&selectedRoomType=214830598&selectedRatePlan=252191235&categorySearch=any_option&searchId=96bca853-4e42-4e61-af6f-e97db4e43e89"},
+    {label:"Cross Hotel Kyoto — ~$1,512",url:"https://www.expedia.com/Kyoto-Hotels-CROSS-HOTEL-KYOTO.h27026975.Hotel-Information?chkin=2026-12-25&chkout=2026-12-30&x_pwa=1&rfrr=HSR&pwa_ts=1784250968243&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=10323&destination=Kyoto%2C+Kyoto+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=6204517&latLong=35.011636%2C135.768029&sort=RECOMMENDED&top_dp=1512&top_cur=USD&userIntent=&selectedRoomType=216625976&selectedRatePlan=264229361&categorySearch=any_option&searchId=96bca853-4e42-4e61-af6f-e97db4e43e89"},
+    {label:"Oakwood Hotel Oike — ~$532",url:"https://www.expedia.com/Kyoto-Hotels-Oakwood-Hotel-Oike-Kyoto.h67522199.Hotel-Information?chkin=2026-12-25&chkout=2026-12-30&x_pwa=1&rfrr=HSR&pwa_ts=1784250968126&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=10323&destination=Kyoto%2C+Kyoto+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=6204517&latLong=35.011636%2C135.768029&sort=RECOMMENDED&top_dp=532&top_cur=USD&userIntent=&selectedRoomType=321924233&selectedRatePlan=400491473&categorySearch=any_option&searchId=96bca853-4e42-4e61-af6f-e97db4e43e89"},
+    {label:"Kyoto Granbell Hotel — ~$1,107",url:"https://www.expedia.com/Kyoto-Hotels-Kyoto-Granbell-Hotel.h18414583.Hotel-Information?chkin=2026-12-25&chkout=2026-12-30&x_pwa=1&rfrr=HSR&pwa_ts=1784250968073&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=10323&destination=Kyoto%2C+Kyoto+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=6160577&latLong=35.011636%2C135.768029&sort=RECOMMENDED&top_dp=1107&top_cur=USD&userIntent=&selectedRoomType=202026770&selectedRatePlan=286274765&categorySearch=any_option&searchId=96bca853-4e42-4e61-af6f-e97db4e43e89"},
+    {label:"The Gate Hotel Takasegawa — ~$1,665",url:"https://www.expedia.com/Kyoto-Hotels-THE-GATE-HOTEL-KYOTO-TAKASEGAWA-By-HULIC.h46993133.Hotel-Information?chkin=2026-12-25&chkout=2026-12-30&x_pwa=1&rfrr=HSR&pwa_ts=1784250968061&referrerUrl=aHR0cHM6Ly93d3cuZXhwZWRpYS5jb20vSG90ZWwtU2VhcmNo&useRewards=false&rm1=a2&regionId=10323&destination=Kyoto%2C+Kyoto+Prefecture%2C+Japan&destType=MARKET&neighborhoodId=6204517&latLong=35.011636%2C135.768029&sort=RECOMMENDED&top_dp=1665&top_cur=USD&userIntent=&selectedRoomType=228010042&selectedRatePlan=390332637&categorySearch=any_option&searchId=96bca853-4e42-4e61-af6f-e97db4e43e89"},
+  ]},
+];
+function renderLinks(){
+  const b=document.getElementById("buckets");
+  if(!LINKS.length){b.innerHTML='<div class="map-note">No links yet — buckets of shared links will show up here.</div>';return;}
+  b.innerHTML=LINKS.map(k=>`<div class="bucket"><h3>${esc(k.title)}</h3>${k.links.map(l=>
+    `<a class="lk-btn" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("")}</div>`).join("");
+}
+const fabMenu=document.getElementById("fabMenu");
+document.getElementById("fabBtn").onclick=()=>fabMenu.classList.toggle("open");
+function setView(v){
+  document.getElementById("viewDash").style.display=(v==="dash")?"":"none";
+  document.getElementById("viewLinks").style.display=(v==="links")?"":"none";
+  fabMenu.querySelectorAll("button").forEach(x=>x.classList.toggle("act",x.dataset.view===v));
+  fabMenu.classList.remove("open");
+}
+fabMenu.querySelectorAll("button").forEach(x=>x.onclick=()=>setView(x.dataset.view));
+document.addEventListener("click",e=>{if(!e.target.closest(".fab-wrap"))fabMenu.classList.remove("open");});
+
 /* ---- Boot ---- */
 document.getElementById("map").innerHTML=renderMap();
 renderRibbon();
@@ -649,6 +729,8 @@ renderLegend();
 renderCalendar();
 renderAgenda();
 renderCostPanel();
+renderLinks();
+setView("dash");
 </script>
 </body>
 </html>
