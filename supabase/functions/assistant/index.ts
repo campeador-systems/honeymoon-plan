@@ -15,7 +15,7 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 
 const LEG_DAYS: Record<string, [number, number]> = {
-  transit: [11, 12], hongkong: [13, 14], thailand: [15, 19], tokyo: [20, 24], kyoto: [25, 30],
+  transit: [11, 12], hongkong: [13, 14], thailand: [15, 19], tokyo: [20, 25], kyoto: [26, 31],
 };
 
 const TOOLS = [

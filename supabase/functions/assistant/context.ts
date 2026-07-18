@@ -3,7 +3,7 @@
 // Regenerate TRIP if the itinerary in index.html changes.
 
 export const TRIP = `
-THE TRIP (Dec 11–30, 2026 — honeymoon, 2 travelers):
+THE TRIP (Dec 11–31, 2026 — honeymoon, 2 travelers):
 - Dec 11 (Fri): depart SFO 11:15 PM, United nonstop to Hong Kong. leg=transit
 - Dec 12 (Sat): in flight, date line. leg=transit
 - Dec 13 (Sun): land HKG 6:45 AM. Day + night in Hong Kong. Hotel TBD. leg=hongkong
@@ -11,13 +11,13 @@ THE TRIP (Dec 11–30, 2026 — honeymoon, 2 travelers):
 - Dec 15–19: Koh Samui, Banyan Tree (Ocean View Pool Villa). leg=thailand
   - Dec 16: elephant sanctuary 9 AM (booked). Dec 17: Koh Tao dive day trip ~7:45 AM–4 PM (booked).
 - Dec 20 (Sun): fly USM→BKK→Tokyo (PG122 + TG660), land 10:05 PM. leg=tokyo
-- Dec 21–24: Tokyo. Hotel TBD. leg=tokyo
-- Dec 25 (Fri): 2:30 PM Shinkansen Tokyo→Kyoto. leg=kyoto
-- Dec 26–29: Kyoto. Hotel TBD. leg=kyoto
-- Dec 30 (Wed): morning Kyoto, KIX→SFO 6:35 PM. leg=kyoto
+- Dec 21–25: Tokyo (Dec 24 Christmas Eve, Dec 25 Christmas Day). Hotel TBD. leg=tokyo
+- Dec 26 (Sat): morning Tokyo, 2:30 PM Shinkansen Tokyo→Kyoto. leg=kyoto
+- Dec 27–30: Kyoto. Hotel TBD. leg=kyoto
+- Dec 31 (Thu): morning Kyoto, KIX→SFO 6:35 PM. leg=kyoto
 
 Valid legs: hongkong, thailand, tokyo, kyoto (transit exists but rarely gets items).
-Valid days: 11–30. Leg day ranges: hongkong 13–14, thailand 15–19, tokyo 20–24, kyoto 25–30.
+Valid days: 11–31. Leg day ranges: hongkong 13–14, thailand 15–19, tokyo 20–25, kyoto 26–31.
 `;
 
 export const CONVENTIONS = `

@@ -4,7 +4,7 @@
 create table public.items (
   id uuid primary key default gen_random_uuid(),
   leg text not null check (leg in ('transit','hongkong','thailand','tokyo','kyoto')),
-  day int check (day between 11 and 30),
+  day int check (day between 11 and 31),
   kind text not null check (kind in ('todo','eat')),
   name text not null check (length(name) between 1 and 120),
   note text check (length(note) <= 200),
