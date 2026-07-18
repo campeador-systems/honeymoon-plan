@@ -91,7 +91,7 @@
   .cell.travel{background:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--c2,var(--c)) 13%,var(--card)) 0 9px,color-mix(in srgb,var(--c) 13%,var(--card)) 9px 18px)}
   .cell .city{font-family:var(--serif);font-weight:600;font-size:15.5px;line-height:1.15;letter-spacing:-.01em;
     color:var(--c);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cell .move,.ag-row .move,.dc-main .move{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;max-width:100%;margin-top:6px;
+  .cell .move,.ag-row .move,.dc-chips .move{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;max-width:100%;margin-top:6px;
     background:var(--c);color:#fff;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.03em;
     padding:3px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cell .hotel,.ag-row .hotel,.dc-main .hotel{margin-top:6px;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-soft);
@@ -109,7 +109,7 @@
   .ag-date{flex:0 0 36px;text-align:center;padding-top:1px}
   .ag-date b{display:block;font-family:var(--sans);font-size:17px;font-weight:700;color:color-mix(in srgb,var(--c) 65%,var(--ink));line-height:1.1}
   .ag-date span{font-family:var(--sans);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--faint)}
-  .ag-main{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+  .ag-main{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start}
   .ag-city{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--c);letter-spacing:-.01em;line-height:1.2}
   .ag-ico{font-size:13px}
   .ag-sub{font-family:var(--sans);font-size:9.5px;color:var(--faint);margin-top:3px}
@@ -175,7 +175,13 @@
   .dc-main{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start}
   .dc-city{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--c);letter-spacing:-.01em;line-height:1.2}
   .dc-sub{font-family:var(--sans);font-size:9.5px;color:var(--faint);margin-top:3px}
-  .dc-car{font-family:var(--sans);color:var(--faint);font-size:14px;padding-top:4px}
+  .dc-chips{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:0 1 auto;min-width:0;max-width:48%}
+  .dc-chips .move{margin-top:0;align-self:flex-end}
+  .dc-car{font-family:var(--sans);color:var(--faint);font-size:14px;padding-top:4px;transition:transform .15s}
+  .dcard.sel{background:var(--tint);box-shadow:0 8px 20px rgba(60,40,20,.12)}
+  .dcard.sel .dc-car{transform:rotate(90deg)}
+  .dc-body{display:none;padding:2px 14px 14px;border-top:1px dashed var(--line)}
+  .dcard.sel .dc-body{display:block}
   /* day detail sub-page */
   .dd-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   .back-btn{background:none;border:none;font-family:var(--sans);font-size:12px;font-weight:700;color:var(--faint);cursor:pointer;padding:0;letter-spacing:.04em}
@@ -402,7 +408,7 @@ const WD_LONG=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Satu
 const wdOf=d=>(WEEKDAY_DEC1+(d-1))%7;
 const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 const fmt$=n=>"$"+Math.round(n||0).toLocaleString("en-US");
-const modeGlyph=m=> m==="train"?"🚄":(m==="boat"?"⛴":"✈");
+const modeGlyph=m=> m==="train"?"🚄":(m==="boat"?"⛴️":"✈️");
 const noteKey=(d,k)=>`planA-${d}-${k}`;
 const EXP_KEY="planA-expenses";
 
@@ -482,7 +488,7 @@ function renderRibbon(){
     if(L.kind==="cap") return `<div class="rib-cap">${L.short}</div>`;
     const c=REGIONS[L.leg].color, tbd=/TBD/.test(L.hotel);
     return `<div class="rib-seg" style="background:${c};flex-grow:${L.nights}" data-leg="${L.leg}" title="Open ${esc(L.city)}">
-      <b>${esc(L.city)}</b><span>Dec ${L.d1}–${L.d2+1} · ${L.nights} nights</span><i>${tbd?"⌂ hotel TBD":"⌂ "+esc(L.hotel)}</i></div>`;
+      <b>${esc(L.city)}</b><span>Dec ${L.d1}–${L.d2+1} · ${L.nights} nights</span><i>${tbd?"🏨 hotel TBD":"🏨 "+esc(L.hotel)}</i></div>`;
   }).join("");
   r.querySelectorAll(".rib-seg").forEach(s=>s.onclick=()=>openHub(s.dataset.leg));
 }
@@ -511,7 +517,7 @@ function renderCalendar(){
     let inner=`<div class="top"><span class="num">${d}</span><span class="ico">${info.ico}</span></div>`;
     inner+=`<div class="city">${esc(info.city)}</div>`;
     if(info.move) inner+=`<span class="move">${modeGlyph(info.move.mode)} ${esc(info.move.brand)}</span>`;
-    if(ht) inner+=`<div class="hotel${ht.tbd?" tbd":""}">⌂ ${esc(ht.name)}</div>`;
+    if(ht) inner+=`<div class="hotel${ht.tbd?" tbd":""}">🏨 ${esc(ht.name)}</div>`;
     inner+=`<div class="sub">${esc(info.nights)}</div>`;
     h+=`<div class="cell trip${info.move?" travel":""}" style="--c:${c}${info.move?`;--c2:${REGIONS[info.move.from].color}`:""}" data-day="${d}">${inner}</div>`;
   }
@@ -529,9 +535,11 @@ function renderAgenda(){
       <div class="ag-date"><b>${d}</b><span>${WD_SHORT[wdOf(d)]}</span></div>
       <div class="ag-main">
         <div class="ag-city">${esc(info.city)} <span class="ag-ico">${info.ico}</span></div>
-        ${info.move?`<span class="move">${modeGlyph(info.move.mode)} ${esc(info.move.brand)}</span>`:""}
-        ${ht?`<div class="hotel${ht.tbd?" tbd":""}">\u2302 ${esc(ht.name)}</div>`:""}
         <div class="ag-sub">${esc(info.nights)}</div>
+      </div>
+      <div class="dc-chips">
+        ${info.move?`<span class="move">${modeGlyph(info.move.mode)} ${esc(info.move.brand)}</span>`:""}
+        ${ht?`<span class="move">🏨 ${esc(ht.name)}</span>`:""}
       </div></div>`;
   }
   a.innerHTML=h;
@@ -557,36 +565,36 @@ const dayContent=d=>CONTENT[d]||{};
 // Travel-day itineraries (transfer times are ~estimates)
 const TRAVEL={
   12:[
-    {ico:"⌂",main:"Home → SFO",sub:"~45 min"},
+    {ico:"🏠",main:"Home → SFO",sub:"~45 min"},
     {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
-    {ico:"✈",main:"UA29 · United · SFO → Singapore (SIN)",sub:"10:40 AM · ~17h 35m · lands 8:15 PM Dec 13 (+1 day)"},
+    {ico:"✈️",main:"UA29 · United · SFO → Singapore (SIN)",sub:"10:40 AM · ~17h 35m · lands 8:15 PM Dec 13 (+1 day)"},
     {ico:"🚕",main:"Changi → Raffles Singapore",sub:"~20 min taxi"},
   ],
   15:[
-    {ico:"⌂",main:"Raffles → Changi (SIN)",sub:"~20 min taxi"},
+    {ico:"🏨",main:"Raffles → Changi (SIN)",sub:"~20 min taxi"},
     {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
-    {ico:"✈",main:"TR642 · Scoot · SIN → Koh Samui (USM)",sub:"10:00 AM → 11:00 AM · 1h"},
+    {ico:"✈️",main:"TR642 · Scoot · SIN → Koh Samui (USM)",sub:"10:00 AM → 11:00 AM · 1h"},
     {ico:"🚕",main:"USM → Banyan Tree",sub:"~30 min resort transfer"},
   ],
   20:[
-    {ico:"⌂",main:"Banyan Tree → Koh Samui (USM)",sub:"~30 min"},
+    {ico:"🏨",main:"Banyan Tree → Koh Samui (USM)",sub:"~30 min"},
     {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
-    {ico:"✈",main:"PG122 · Bangkok Airways · USM → Bangkok (BKK)",sub:"9:20 AM → 10:35 AM · 1h 15m"},
+    {ico:"✈️",main:"PG122 · Bangkok Airways · USM → Bangkok (BKK)",sub:"9:20 AM → 10:35 AM · 1h 15m"},
     {ico:"🕐",main:"Layover in Bangkok",sub:"3h 50m"},
-    {ico:"✈",main:"TG660 · Thai Airways · BKK → Tokyo",sub:"2:25 PM → 10:05 PM · ~6h 40m"},
+    {ico:"✈️",main:"TG660 · Thai Airways · BKK → Tokyo",sub:"2:25 PM → 10:05 PM · ~6h 40m"},
     {ico:"🚕",main:"Airport → Tokyo hotel",sub:"~45 min"},
   ],
   25:[
-    {ico:"⌂",main:"Tokyo hotel → Tokyo Station",sub:"~20 min"},
+    {ico:"🏨",main:"Tokyo hotel → Tokyo Station",sub:"~20 min"},
     {ico:"🕐",main:"Station buffer",sub:"30 min before departure"},
     {ico:"🚄",main:"Shinkansen · Tokyo → Kyoto",sub:"2:30 PM → 4:44 PM · 2h 14m"},
     {ico:"🚕",main:"Kyoto Station → hotel",sub:"~15 min"},
   ],
   30:[
-    {ico:"⌂",main:"Kyoto hotel → Osaka Kansai (KIX)",sub:"~90 min"},
+    {ico:"🏨",main:"Kyoto hotel → Osaka Kansai (KIX)",sub:"~90 min"},
     {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
-    {ico:"✈",main:"UA34 · United · KIX → SFO",sub:"6:35 PM → 11:50 AM same day · ~10h 15m"},
-    {ico:"⌂",main:"SFO → home",sub:"~45 min"},
+    {ico:"✈️",main:"UA34 · United · KIX → SFO",sub:"6:35 PM → 11:50 AM same day · ~10h 15m"},
+    {ico:"🏠",main:"SFO → home",sub:"~45 min"},
   ],
 };
 
@@ -608,14 +616,17 @@ function legName(l){return l==="transit"?"Home":REGIONS[l].label.split(",")[0];}
 function dayRowHTML(d){
   const info=PLAN.days[d], ht=hotelFor(d,info);
   const c2=info.move?`;--c2:${REGIONS[info.move.from].color}`:"";
-  return `<div class="dcard${info.move?" travel":""}" style="--c:${REGIONS[info.leg].color}${c2}">
+  return `<div class="dcard${info.move?" travel":""}" data-d="${d}" style="--c:${REGIONS[info.leg].color}${c2}">
     <div class="dc-head" data-d="${d}">
     <div class="dc-date"><b>${d}</b><span>${WD_SHORT[wdOf(d)]}</span></div>
     <div class="dc-main"><div class="dc-city">${esc(info.city)} <span class="ag-ico">${info.ico}</span></div>
-      ${info.move?`<span class="move">${modeGlyph(info.move.mode)} ${esc(info.move.brand)}</span>`:""}
-      ${ht?`<div class="hotel${ht.tbd?" tbd":""}">⌂ ${esc(ht.name)}</div>`:""}
       <div class="dc-sub">${esc(info.nights)}</div></div>
-    <div class="dc-car">›</div></div></div>`;
+    <div class="dc-chips">
+      ${info.move?`<span class="move">${modeGlyph(info.move.mode)} ${esc(info.move.brand)}</span>`:""}
+      ${ht?`<span class="move">🏨 ${esc(ht.name)}</span>`:""}
+    </div>
+    <div class="dc-car">›</div></div>
+    <div class="dc-body"></div></div>`;
 }
 
 function itemsHTML(arr,color){
@@ -624,31 +635,43 @@ function itemsHTML(arr,color){
     <div><div>${it.url?`<a class="it-link" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.name)} ↗</a>`:esc(it.name)}</div>${it.note?`<div class="it-sub">${esc(it.note)}</div>`:""}</div></div>`).join("");
 }
 const popHTML=(it,d)=>`${esc(it.name)} — Dec ${d}`+(it.url?`<br><a href="${esc(it.url)}" target="_blank" rel="noopener">Open in Google Maps ↗</a>`:"");
-function detailHTML(d){
-  const info=PLAN.days[d], days=legDays(hubLeg), ct=dayContent(d), ht=hotelFor(d,info);
-  const title=info.move?`${legName(info.move.from)} → ${legName(info.move.to)}`:
-    `Day ${days.indexOf(d)+1} of ${days.length} in ${legName(info.leg)}`;
+
+function sectionsHTML(d){
+  const info=PLAN.days[d], ct=dayContent(d);
   const trav=info.move&&TRAVEL[d]?`<div class="dd-sec"><div class="dd-lbl">${modeGlyph(info.move.mode)} Travel itinerary</div>
     <div class="tl">${TRAVEL[d].map(r=>`<div class="tl-row"><div class="tl-ico">${r.ico}</div>
     <div><div class="tl-main">${esc(r.main)}</div><div class="tl-sub">${esc(r.sub)}</div></div></div>`).join("")}</div></div>`:"";
   const saved=localStorage.getItem(noteKey(d,"notes"));
+  return `${trav}
+    <div class="dd-sec"><div class="dd-lbl">◎ What to do</div>${itemsHTML(ct.todo,TODO_C)}</div>
+    <div class="dd-sec"><div class="dd-lbl">☕ Where to eat</div>${itemsHTML(ct.eat,EAT_C)}</div>
+    <div class="dd-sec"><div class="dd-lbl">✎ Notes</div><textarea class="dd-notes" data-d="${d}" placeholder="Free-form notes…">${esc(saved!=null?saved:"")}</textarea></div>`;
+}
+function wireNotes(root,d){
+  const ta=root.querySelector(".dd-notes"); if(!ta)return;
+  ta.addEventListener("input",()=>{localStorage.setItem(noteKey(d,"notes"),ta.value);showSaved();});
+}
+function detailHTML(d){
+  const info=PLAN.days[d], days=legDays(hubLeg);
+  const title=info.move?`${legName(info.move.from)} → ${legName(info.move.to)}`:
+    `Day ${days.indexOf(d)+1} of ${days.length} in ${legName(info.leg)}`;
   return `<div class="dd-top"><button class="back-btn" id="hubBack">‹ All days</button>
       <span class="dd-date">Dec ${d} · ${WD_LONG[wdOf(d)]}</span>
       <span class="dd-title" style="color:${REGIONS[info.leg].color}">${esc(title)}</span></div>
-    ${trav}
-    <div class="dd-sec"><div class="dd-lbl">◎ What to do</div>${itemsHTML(ct.todo,TODO_C)}</div>
-    <div class="dd-sec"><div class="dd-lbl">☕ Where to eat</div>${itemsHTML(ct.eat,EAT_C)}</div>
-    <div class="dd-sec"><div class="dd-lbl">✎ Notes</div><textarea class="dd-notes" id="ddNotes" placeholder="Free-form notes…">${esc(saved!=null?saved:"")}</textarea></div>`;
+    ${sectionsHTML(d)}`;
 }
 
+const MOBILE=()=>window.matchMedia("(max-width:860px)").matches;
+function onDayClick(d){ if(MOBILE())showDay(d); else accordion(d); }
+
+/* mobile: slide-over sub-page */
 function showDay(d){
   hubSel=d;
   const pane=document.getElementById("hubDetail");
   pane.innerHTML=detailHTML(d);
   document.getElementById("hubViews").classList.add("dsel");
   document.getElementById("hubBack").onclick=backToList;
-  const ta=document.getElementById("ddNotes");
-  ta.addEventListener("input",()=>{localStorage.setItem(noteKey(d,"notes"),ta.value);showSaved();});
+  wireNotes(pane,d);
   pane.scrollTop=0;
   applySelMap();
 }
@@ -658,11 +681,47 @@ function backToList(){
   applySelMap();
 }
 
+/* desktop: cards expand/collapse in place */
+function accordion(d){
+  hubSel=(hubSel===d)?null:d;
+  document.querySelectorAll("#hubList .dcard").forEach(card=>{
+    const cd=+card.dataset.d, sel=cd===hubSel, body=card.querySelector(".dc-body");
+    card.classList.toggle("sel",sel);
+    body.innerHTML=sel?sectionsHTML(cd):"";
+    if(sel)wireNotes(body,cd);
+  });
+  applySelMap();
+  if(hubSel!=null){const el=document.querySelector(`#hubList .dcard[data-d="${hubSel}"]`);if(el)el.scrollIntoView({block:"nearest",behavior:"smooth"});}
+}
+
+/* mobile: swipe left/right on the day sub-page to move between days */
+const LEGSEQ=(()=>{const seq=[];for(let d=1;d<=DAYS_IN_DEC;d++){const i=PLAN.days[d];if(i&&!seq.includes(i.leg))seq.push(i.leg);}return seq;})();
+function navDay(dir){
+  if(hubSel==null)return;
+  const days=legDays(hubLeg),i=days.indexOf(hubSel);
+  if(dir>0){
+    if(i<days.length-1)showDay(days[i+1]);
+    else{const ni=LEGSEQ.indexOf(hubLeg)+1;if(ni<LEGSEQ.length)openHub(LEGSEQ[ni],legDays(LEGSEQ[ni])[0]);}
+  }else{
+    if(i>0)showDay(days[i-1]);
+    else backToList();
+  }
+}
+(()=>{
+  const pane=document.getElementById("hubDetail");let sx=0,sy=0,st=0;
+  pane.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();},{passive:true});
+  pane.addEventListener("touchend",e=>{
+    const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Date.now()-st>700||Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*0.6)return;
+    navDay(dx<0?1:-1);
+  },{passive:true});
+})();
+
 function buildMarkers(){
   if(!hubMap)return;
   hubMarkers.forEach(x=>x.m.remove());hubMarkers=[];
   const hg=HOTELGEO[hubLeg];
-  if(hg){const m=L.marker([hg.lat,hg.lng],{icon:mkPin("⌂",REGIONS[hubLeg].color),zIndexOffset:500}).addTo(hubMap).bindPopup(esc(hg.name));hubMarkers.push({day:null,m:m,label:"⌂",color:REGIONS[hubLeg].color});}
+  if(hg){const m=L.marker([hg.lat,hg.lng],{icon:mkPin("🏨",REGIONS[hubLeg].color),zIndexOffset:500}).addTo(hubMap).bindPopup(esc(hg.name));hubMarkers.push({day:null,m:m,label:"🏨",color:REGIONS[hubLeg].color});}
   legDays(hubLeg).forEach(d=>{
     const ct=dayContent(d);
     (ct.todo||[]).forEach((it,i)=>{if(it.lat==null)return;
@@ -726,13 +785,13 @@ function openHub(leg,selDay){
   document.getElementById("hubEye").textContent=`Dec ${days[0]} – ${days[days.length-1]} · ${days.length} day${days.length>1?"s":""}`;
   const ce=document.getElementById("hubCity");ce.textContent=leg==="transit"?"In transit":legName(leg);ce.style.color=c;
   const hg=HOTELGEO[leg];
-  document.getElementById("hubSub").textContent=hg?"⌂ "+hg.name:(leg==="transit"?"":"⌂ Hotel TBD");
+  document.getElementById("hubSub").textContent=hg?"🏨 "+hg.name:(leg==="transit"?"":"🏨 Hotel TBD");
   document.getElementById("hubViews").classList.remove("dsel");
   document.getElementById("hubList").innerHTML=days.map(dayRowHTML).join("");
-  document.querySelectorAll("#hubList .dc-head").forEach(h=>h.onclick=()=>showDay(+h.dataset.d));
+  document.querySelectorAll("#hubList .dc-head").forEach(h=>h.onclick=()=>onDayClick(+h.dataset.d));
   scrim.classList.add("open");
   initHubMap();
-  if(selDay!=null)showDay(selDay);
+  if(selDay!=null)onDayClick(selDay);
 }
 
 function initHubMap(){
