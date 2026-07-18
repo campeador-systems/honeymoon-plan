@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan A — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root{color-scheme:light;
+    --ink:#221b12;--ink-soft:#544a3d;--faint:#8f836e;
+    --paper:#f3edde;--card:#fffdf6;--line:#e4d9c3;--rule:#c9bca8;--chip:#efe7d8;
+    --teal:#0f766e;
+    --serif:"Fraunces","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:"Instrument Sans","Helvetica Neue",Arial,sans-serif;}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--serif);line-height:1.5;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.5;
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.035 0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>")}
+  .wrap{margin:0 auto;padding:22px 26px 44px;position:relative;z-index:2}
+  .sans{font-family:var(--sans)}
+  .lbl{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--faint);border-bottom:1px solid var(--line);padding-bottom:7px;margin:0 0 14px}
+  .lbl .hint{float:right;letter-spacing:.03em;text-transform:none;font-weight:500;font-style:italic}
+
+  /* ---- Main: costs+map left | calendar right ---- */
+  .main{display:flex;gap:26px;align-items:flex-start}
+  .left{flex:0 0 480px;min-width:0;display:flex;flex-direction:column;gap:24px}
+  .right{flex:1;min-width:0}
+
+  /* ---- Cost panel ---- */
+  .cost-panel{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--teal);
+    border-radius:12px;padding:14px 16px;cursor:pointer;transition:transform .12s,box-shadow .12s}
+  .cost-panel:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(60,40,20,.13)}
+  .cp-tots{display:flex;gap:18px;margin-bottom:11px}
+  .cp-t{flex:1}
+  .cp-l{display:block;font-family:var(--sans);font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:var(--faint)}
+  .cp-t b{display:block;font-family:var(--sans);font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+  .cp-t.pts b{color:var(--teal)}
+  .cp-cat{display:flex;align-items:center;gap:8px;font-family:var(--sans);font-size:11.5px;color:var(--ink-soft);
+    padding:3px 0;border-top:1px dashed var(--line)}
+  .cp-dot{width:8px;height:8px;border-radius:2px;flex:none}
+  .cp-name{font-weight:600}
+  .cp-val{margin-left:auto;color:var(--faint);text-align:right}
+  .cp-hint{margin-top:9px;font-family:var(--sans);font-size:10.5px;font-style:italic;color:var(--faint)}
+
+  /* ---- Trip ribbon ---- */
+  .ribbon{display:flex;gap:6px;margin:0 0 30px;min-height:66px}
+  .rib-cap{flex:0 0 92px;background:#453e33;color:#f3edde;border-radius:11px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.06em;line-height:1.5;padding:6px}
+  .rib-seg{min-width:0;border-radius:11px;color:#fff;padding:9px 13px;cursor:pointer;
+    display:flex;flex-direction:column;justify-content:center;
+    transition:filter .12s,transform .12s}
+  .rib-seg:hover{filter:brightness(1.08);transform:translateY(-2px)}
+  .rib-seg b{font-family:var(--serif);font-style:italic;font-weight:600;font-size:17px;line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rib-seg span{font-family:var(--sans);font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    opacity:.85;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rib-seg i{font-style:normal;font-family:var(--sans);font-size:11px;font-weight:500;opacity:.92;margin-top:3px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ---- Calendar (hero) ---- */
+  .cal-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:10px;flex-wrap:wrap}
+  .cal-head h2{font-family:var(--serif);font-style:italic;font-weight:600;font-size:27px;margin:0;letter-spacing:-.01em}
+  .cal-head h2 span{color:var(--faint)}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-soft)}
+  .legend .li{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .legend .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .cal-scroll{overflow-x:auto}
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-bottom:7px;padding-left:2px;
+    font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+  .cell{position:relative;border:1px solid var(--line);border-radius:11px;background:var(--card);
+    padding:8px 10px 9px;min-height:122px;display:flex;flex-direction:column;overflow:hidden}
+  .cell.void{border:none;background:transparent;min-height:0}
+  .cell.off{background:transparent;border:1px dashed #e6dcc8;min-height:0;opacity:.55}
+  .cell .num{font-family:var(--sans);font-weight:700;font-size:12px;color:var(--faint)}
+  .cell .top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .cell .ico{font-size:12px;line-height:1}
+  .cell.trip{--tint:color-mix(in srgb,var(--c) 7%,var(--card));
+    background:var(--tint);border-color:color-mix(in srgb,var(--c) 30%,var(--line));
+    border-left:4px solid var(--c);cursor:pointer;transition:transform .12s,box-shadow .12s}
+  .cell.trip:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(60,40,20,.15)}
+  .cell.trip .num{color:color-mix(in srgb,var(--c) 65%,var(--ink))}
+  .cell.travel{background:repeating-linear-gradient(-45deg,var(--tint) 0 9px,color-mix(in srgb,var(--c) 13%,var(--card)) 9px 18px)}
+  .cell .city{font-family:var(--serif);font-weight:600;font-size:15.5px;line-height:1.15;letter-spacing:-.01em;
+    color:var(--c);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cell .move,.ag-row .move{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;max-width:100%;margin-top:6px;
+    background:var(--c);color:#fff;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.03em;
+    padding:3px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cell .hotel,.ag-row .hotel{margin-top:6px;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-soft);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cell .hotel.tbd,.ag-row .hotel.tbd{font-weight:500;font-style:italic;color:var(--faint)}
+  .cell .sub{margin-top:auto;padding-top:5px;font-family:var(--sans);font-size:9.5px;font-weight:500;
+    letter-spacing:.03em;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ---- Mobile agenda (shown under 700px instead of the grid) ---- */
+  .agenda{display:none}
+  .ag-row{--tint:color-mix(in srgb,var(--c) 7%,var(--card));display:flex;gap:12px;align-items:flex-start;
+    background:var(--tint);border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));border-left:4px solid var(--c);
+    border-radius:11px;padding:10px 12px;cursor:pointer}
+  .ag-row.travel{background:repeating-linear-gradient(-45deg,var(--tint) 0 9px,color-mix(in srgb,var(--c) 13%,var(--card)) 9px 18px)}
+  .ag-date{flex:0 0 36px;text-align:center;padding-top:1px}
+  .ag-date b{display:block;font-family:var(--sans);font-size:17px;font-weight:700;color:color-mix(in srgb,var(--c) 65%,var(--ink));line-height:1.1}
+  .ag-date span{font-family:var(--sans);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--faint)}
+  .ag-main{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+  .ag-city{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--c);letter-spacing:-.01em;line-height:1.2}
+  .ag-ico{font-size:13px}
+  .ag-sub{font-family:var(--sans);font-size:9.5px;color:var(--faint);margin-top:3px}
+
+  @media(max-width:700px){
+    .wrap{padding:14px 14px 36px}
+    .cal-scroll{display:none}
+    .agenda{display:flex;flex-direction:column;gap:8px}
+    .cal-head h2{font-size:22px}
+    .ribbon{overflow-x:auto;min-height:60px;margin-bottom:20px}
+    .rib-seg{min-width:128px}
+    .rib-cap{flex:0 0 76px}
+    .main{gap:22px}
+  }
+
+  .tmap{width:100%;height:auto;display:block;border-radius:12px}
+
+  @media(max-width:980px){
+    .main{flex-direction:column}
+    .left{flex:none;width:100%}
+    .right{order:-1;width:100%}
+    .rib-seg i{display:none}
+    .rib-cap{flex-basis:72px}
+  }
+
+  /* ---- Modals ---- */
+  .scrim{position:fixed;inset:0;background:rgba(26,20,14,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .scrim.open{display:flex}
+  .modal{background:var(--card);width:100%;max-width:540px;border-radius:14px;max-height:90vh;overflow:auto;
+    box-shadow:0 24px 60px rgba(30,20,10,.4);border-top:6px solid var(--ink)}
+  .modal-wide{max-width:660px}
+  .m-head{padding:20px 22px 14px;border-bottom:1px solid var(--line);position:relative}
+  .m-eyebrow{font-family:var(--sans);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+  .m-city{font-family:var(--serif);font-size:28px;font-style:italic;font-weight:700;margin:4px 0 0;letter-spacing:-.01em}
+  .m-sub{font-family:var(--sans);font-size:12px;color:var(--ink-soft);margin-top:6px;display:flex;flex-wrap:wrap;gap:6px 14px}
+  .m-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:26px;line-height:1;color:var(--faint);cursor:pointer}
+  .m-body{padding:16px 22px 24px}
+  .fld{margin-bottom:14px}
+  .fld label{display:block;font-family:var(--sans);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+  .fld textarea{width:100%;min-height:44px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-family:inherit;font-size:14.5px;color:var(--ink);background:#fffef9;line-height:1.5}
+  .fld textarea:focus{outline:none;border-color:var(--rule);background:#fff}
+
+  /* ---- Day map ---- */
+  #dayMapWrap{margin-bottom:16px}
+  #dayMap{height:260px;border-radius:10px;border:1px solid var(--line);background:#e4edee}
+  .pin{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;border:2px solid #fffdf6;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .pl-row{display:flex;align-items:center;gap:8px;font-family:var(--sans);font-size:12px;color:var(--ink-soft);
+    padding:5px 2px;border-bottom:1px dashed var(--line)}
+  .pl-num{width:18px;height:18px;border-radius:50%;background:#3730a3;color:#fff;font-size:10px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;flex:none}
+  .pl-del{margin-left:auto;background:none;border:none;color:var(--faint);cursor:pointer;font-size:15px;line-height:1;padding:2px 5px}
+  .pl-add{display:flex;gap:6px;margin-top:8px}
+  .pl-add input{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-family:var(--sans);font-size:12px;background:#fffef9;color:var(--ink)}
+  .pl-add input:focus{outline:none;border-color:var(--rule)}
+  .pl-add .n{flex:1;min-width:0}
+  .pl-add .c{flex:0 0 130px}
+  .pl-btn{background:var(--ink);color:#fff;border:none;border-radius:7px;font-family:var(--sans);font-size:12px;font-weight:600;padding:6px 11px;cursor:pointer;flex:none}
+  .map-note{font-family:var(--sans);font-size:10.5px;color:var(--faint);margin-top:6px;font-style:italic}
+
+  .ct-totals{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+  .ct-tot{flex:1;min-width:180px;background:var(--card);border:1px solid var(--line);border-radius:12px;border-top:4px solid var(--ink);padding:13px 15px}
+  .ct-tot .l{font-family:var(--sans);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .ct-tot .big{font-size:28px;font-weight:800;font-family:var(--sans);letter-spacing:-.02em;margin-top:2px}
+  .ct-tot .sub{font-family:var(--sans);font-size:11px;color:var(--ink-soft);margin-top:6px;line-height:1.5}
+  .ct-cats{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px}
+  .ct-cat{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 12px;border-left:4px solid;min-width:120px}
+  .ct-cat .cn{font-family:var(--sans);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+  .ct-cat .cv{font-family:var(--sans);font-size:12px;color:var(--ink-soft);margin-top:3px}
+  table.ct{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  table.ct th{font-family:var(--sans);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);background:#fbf6ec}
+  table.ct td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  table.ct tr:last-child td{border-bottom:none}
+  table.ct input,table.ct select{width:100%;border:1px solid transparent;border-radius:6px;background:transparent;font-family:inherit;font-size:13.5px;color:var(--ink);padding:5px 6px}
+  table.ct input:focus,table.ct select:focus{outline:none;border-color:var(--rule);background:#fffef9}
+  table.ct input.num{font-family:var(--sans);text-align:right}
+  table.ct th.num{text-align:right}
+  table.ct td.numcell{width:100px}table.ct td.catcell{width:118px}
+  .ct-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:17px;line-height:1;padding:2px 6px}
+  .ct-add{font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;background:var(--ink);color:#fff;border:none;border-radius:8px;padding:8px 15px;margin-top:11px}
+  @media(max-width:600px){
+    table.ct,table.ct tbody,table.ct tr,table.ct td{display:block;width:100%}
+    table.ct thead{display:none}
+    table.ct{border:none;background:transparent}
+    table.ct tr{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:10px}
+    table.ct td{border:none;padding:3px 0;display:flex;gap:10px}
+    table.ct td::before{content:attr(data-label);flex:0 0 80px;font-family:var(--sans);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+    table.ct td.delcell{justify-content:flex-end}table.ct td.delcell::before{content:none}
+    table.ct input,table.ct select{border:1px solid var(--line);background:#fffef9;flex:1;width:auto}
+    table.ct input.num{text-align:left}
+  }
+  #saveflash{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--teal);color:#fff;font-family:var(--sans);font-size:12px;padding:7px 16px;border-radius:20px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:70}
+  #saveflash.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="ribbon" id="ribbon"></div>
+
+  <div class="main">
+    <div class="left">
+      <div><div class="lbl">Costs <span class="hint">tap to edit</span></div><div id="costPanel"></div></div>
+      <div><div class="lbl">Route map</div><div id="map"></div></div>
+    </div>
+    <div class="right">
+      <div class="cal-head">
+        <h2>December <span>2026</span></h2>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="cal-scroll">
+        <div class="dow"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+        <div class="grid" id="grid"></div>
+      </div>
+      <div class="agenda" id="agenda"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="scrim" id="scrim"><div class="modal">
+  <div class="m-head"><button class="m-close" id="mClose">&times;</button>
+    <div class="m-eyebrow" id="mEye"></div><div class="m-city" id="mCity"></div><div class="m-sub" id="mSub"></div></div>
+  <div class="m-body" id="mBody"></div>
+</div></div>
+
+<div class="scrim" id="scrimCost"><div class="modal modal-wide">
+  <div class="m-head"><button class="m-close" id="cClose">&times;</button>
+    <div class="m-eyebrow">Cost tracker</div><div class="m-city" id="cTitle" style="color:#0f766e">Plan A</div></div>
+  <div class="m-body">
+    <div class="ct-totals" id="ctT"></div><div class="ct-cats" id="ctC"></div>
+    <div style="overflow-x:auto"><table class="ct" id="ctTable"></table></div>
+    <button class="ct-add" id="ctAdd">+ Add expense</button>
+  </div>
+</div></div>
+<div id="saveflash" class="sans">Saved ✓</div>
+
+<script>
+const REGIONS={
+  transit:{label:"In transit",color:"#6b7280"},singapore:{label:"Singapore",color:"#0f766e"},
+  thailand:{label:"Koh Samui, Thailand",color:"#c2410c"},tokyo:{label:"Tokyo, Japan",color:"#3730a3"},
+  kyoto:{label:"Kyoto, Japan",color:"#9d174d"},
+};
+const PLAN={
+  stats:[["19","Days"],["4","Destinations"],["3","Countries"],["4","Flights"]],
+  route:[["SFO","transit"],["Singapore","singapore"],["Koh Samui","thailand"],["Tokyo","tokyo"],["Kyoto","kyoto"],["SFO","transit"]],
+  expSeed:[
+    {desc:"United open-jaw ×2 — UA29 SFO→SIN (Dec 12) + UA34 KIX→SFO (Dec 30)", cat:"Flights", cash:5526, points:0, prog:""},
+    {desc:"Raffles Singapore — 2 nights", cat:"Lodging", cash:0, points:145577, prog:"Chase UR"},
+    {desc:"Banyan Tree Koh Samui — Ocean View Pool Villa, 5 nights", cat:"Lodging", cash:0, points:330527, prog:"Chase UR"},
+    {desc:"Scoot TR642 ×2 — Singapore → Koh Samui (Dec 15), $207 each", cat:"Flights", cash:414, points:0, prog:""},
+    {desc:"PG122 + TG660 ×2 — Koh Samui → Bangkok → Tokyo (Dec 20), $477 each", cat:"Flights", cash:954, points:0, prog:""},
+    {desc:"Shinkansen ×2 — Tokyo → Kyoto (Dec 25), $83 each", cat:"Transport", cash:166, points:0, prog:""},
+  ],
+  days:{
+    12:{leg:"transit",city:"Depart SFO",ico:"✈️",nights:"Overnight flight",move:{mode:"plane",brand:"United"},seed:{transport:"UA29 · SFO → Singapore (SIN). Departs 10:40 AM. Overnight over the Pacific.",stay:"Red-eye on the plane."}},
+    13:{leg:"singapore",city:"Singapore",ico:"🏙️",nights:"Night 1 of 2 · arrive PM",hotel:"Raffles Singapore",seed:{transport:"UA29 lands Singapore (SIN) 8:15 PM (Dec 13 — cross the date line). Evening arrival.",stay:"Raffles Singapore — 2 nights. Check in."}},
+    14:{leg:"singapore",city:"Singapore",ico:"🏙️",nights:"Night 2 of 2 · full day",hotel:"Raffles Singapore",seed:{stay:"Raffles Singapore — night 2."}},
+    15:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 1 of 5",move:{mode:"plane",brand:"Scoot"},hotel:"Banyan Tree",seed:{transport:"TR642 · Scoot · Singapore → Koh Samui (USM). Departs 10:00 AM, lands 11:00 AM.",stay:"Banyan Tree Koh Samui — Ocean View Pool Villa. Check in."}},
+    16:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 2 of 5",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
+    17:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 3 of 5",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
+    18:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 4 of 5",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
+    19:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 5 of 5",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
+    20:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 1 of 5",move:{mode:"plane",brand:"Bangkok Air → Thai"},seed:{transport:"PG122 · Bangkok Airways · Koh Samui (USM) → Bangkok (BKK). Dep 9:20 AM, arr 10:35 AM. — 3h50m layover — TG660 · Thai Airways · Bangkok (BKK) → Tokyo. Dep 2:25 PM, lands 10:05 PM."}},
+    21:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 2 of 5",seed:{}},
+    22:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 3 of 5",seed:{}},
+    23:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 4 of 5",seed:{}},
+    24:{leg:"tokyo",city:"Tokyo",ico:"🎄",nights:"Night 5 of 5 · Christmas Eve",seed:{}},
+    25:{leg:"kyoto",city:"Tokyo → Kyoto",ico:"🚄",nights:"Kyoto · night 1 of 5",move:{mode:"train",brand:"Shinkansen"},seed:{transport:"Day in Tokyo, then 2:30 PM Shinkansen Tokyo → Kyoto, arriving 4:44 PM."}},
+    26:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 2 of 5",seed:{}},
+    27:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 3 of 5",seed:{}},
+    28:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 4 of 5",seed:{}},
+    29:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 5 of 5",seed:{}},
+    30:{leg:"kyoto",city:"Kyoto → Home",ico:"✈️",nights:"Half day",move:{mode:"plane",brand:"United"},seed:{transport:"Morning free in Kyoto, then transfer to Osaka (KIX). UA34 · KIX → SFO departs 6:35 PM, lands SFO 11:50 AM (same day).",stay:"Check out; overnight flight home."}},
+  },
+};
+
+const LANDREAL=[[[119.13,-8.71],[116.74,-9.03],[117.08,-8.46],[117.63,-8.45],[117.9,-8.1],[118.88,-8.28],[119.13,-8.71]],[[113.46,-8.35],[106.45,-7.35],[106.28,-6.92],[105.37,-6.85],[106.05,-5.9],[107.27,-5.95],[108.49,-6.42],[108.62,-6.78],[110.54,-6.88],[110.76,-6.47],[112.61,-6.95],[112.98,-7.59],[114.48,-7.78],[115.71,-8.37],[114.56,-8.75],[113.46,-8.35]],[[98.6,1.82],[95.38,4.97],[95.29,5.48],[97.48,5.25],[100.64,2.1],[101.66,2.08],[103.84,0.1],[103.44,-0.71],[104.37,-1.08],[104.89,-2.34],[105.62,-2.43],[106.11,-3.06],[105.82,-5.85],[104.71,-5.87],[102.58,-4.22],[99.26,0.18],[98.6,1.82]],[[111.7,-2.99],[110.22,-2.93],[110.07,-1.59],[109.09,-0.46],[109.07,1.34],[109.66,2.01],[110.4,1.66],[111.17,1.85],[111.37,2.7],[113.0,3.1],[116.73,6.92],[117.13,6.93],[117.69,5.99],[119.18,5.41],[119.11,5.02],[118.44,4.97],[118.62,4.48],[117.88,4.14],[117.31,3.23],[118.05,2.29],[117.88,1.83],[119.0,0.9],[117.81,0.78],[117.48,0.1],[117.52,-0.8],[116.56,-1.49],[116.15,-4.01],[116.0,-3.66],[114.86,-4.11],[114.47,-3.5],[113.26,-3.12],[112.07,-3.48],[111.7,-2.99]],[[109.12,19.82],[110.79,20.08],[111.01,19.7],[110.34,18.68],[109.48,18.2],[108.66,18.51],[108.63,19.37],[109.12,19.82]],[[-154.81,19.51],[-155.69,18.92],[-155.94,19.06],[-155.86,20.27],[-154.81,19.51]],[[-123.92,49.06],[-123.51,48.51],[-124.01,48.37],[-125.66,48.83],[-127.03,49.81],[-128.06,49.99],[-128.44,50.54],[-128.36,50.77],[-125.76,50.3],[-124.92,49.48],[-123.92,49.06]],[[-118.52,34.03],[-120.62,34.61],[-120.74,35.16],[-121.71,36.16],[-122.51,37.78],[-123.73,38.95],[-123.87,39.77],[-124.4,40.31],[-124.21,42.0],[-124.53,42.77],[-123.9,45.52],[-124.08,46.86],[-124.69,48.18],[-124.57,48.38],[-123.12,48.04],[-122.59,47.1],[-122.34,47.36],[-122.84,49.0],[-125.62,50.42],[-127.44,50.83],[-127.99,51.72],[-127.85,52.33],[-129.13,52.76],[-129.31,53.56],[-130.51,54.29],[-130.54,54.8],[-131.97,55.5],[-132.25,56.37],[-133.54,57.18],[-134.08,58.12],[-136.63,58.21],[-139.87,59.54],[-142.57,60.08],[-143.96,60.0],[-147.11,60.88],[-148.22,60.67],[-148.02,59.98],[-151.72,59.16],[-151.86,59.75],[-151.41,60.73],[-150.35,61.03],[-150.62,61.28],[-154.02,59.35],[-153.29,58.86],[-154.23,58.15],[-156.31,57.42],[-156.56,56.98],[-158.12,56.46],[-158.43,55.99],[-164.79,54.4],[-164.94,54.57],[-161.8,55.9],[-160.56,56.01],[-157.72,57.57],[-157.04,58.92],[-158.52,58.79],[-159.06,58.42],[-159.71,58.93],[-159.98,58.57],[-160.36,59.07],[-161.97,58.67],[-161.87,59.63],[-162.52,59.99],[-163.82,59.8],[-165.35,60.51],[-165.35,61.07],[-166.12,61.5],[-165.73,62.08],[-164.56,63.15],[-163.07,63.06],[-162.26,63.54],[-160.77,63.77],[-160.96,64.22],[-161.52,64.4],[-160.78,64.79],[-162.76,64.34],[-164.96,64.45],[-166.43,64.69],[-168.11,65.67],[-164.47,66.58],[-163.65,66.58],[-163.79,66.08],[-161.68,66.12],[-165.39,68.04],[-166.76,68.36],[-166.2,68.88],[-164.43,68.92],[-163.17,69.37],[-162.63,70.0],[-142.82,70.0],[-136.5,68.9],[-134.41,69.63],[-132.93,69.51],[-131.07,70.0],[-129.11,69.78],[-126.74,70.0],[-125.76,69.48],[-124.4,70.0],[-124.29,69.4],[-122.68,69.86],[-121.47,69.8],[-116.0,68.86],[-116.0,30.38],[-117.3,33.05],[-118.52,34.03]],[[-131.18,52.18],[-131.58,52.18],[-133.05,53.41],[-133.18,54.17],[-131.75,54.12],[-132.05,52.98],[-131.18,52.18]],[[-153.23,57.97],[-152.14,57.59],[-153.01,57.12],[-154.01,56.73],[-154.52,56.99],[-154.67,57.46],[-153.23,57.97]],[[-165.58,59.91],[-167.46,60.21],[-165.67,60.29],[-165.58,59.91]],[[-171.73,63.78],[-168.69,63.3],[-169.53,62.98],[-171.79,63.41],[-171.73,63.78]],[[-178.36,65.39],[-178.9,65.74],[-178.69,66.11],[-179.88,65.87],[-179.43,65.4],[-180.0,64.98],[-180.0,68.96],[-174.93,67.21],[-175.01,66.58],[-174.34,66.34],[-174.57,67.06],[-171.86,66.91],[-169.9,65.98],[-170.89,65.54],[-172.53,65.44],[-172.56,64.46],[-172.96,64.25],[-175.98,64.92],[-176.21,65.36],[-178.36,65.39]],[[-117.34,69.96],[-116.0,70.0],[-116.0,69.18],[-116.11,69.17],[-117.34,69.96]],[[148.85,-20.39],[148.72,-20.63],[149.68,-22.34],[150.08,-22.12],[150.48,-22.56],[150.73,-22.4],[150.9,-23.46],[152.86,-25.27],[153.14,-26.07],[153.51,-29.0],[152.72,-32.0],[132.71,-32.0],[131.33,-31.5],[128.07,-32.0],[115.76,-32.0],[115.04,-29.46],[113.34,-26.12],[113.78,-26.55],[113.44,-25.62],[114.23,-26.3],[113.39,-24.38],[114.15,-21.76],[114.23,-22.52],[114.65,-21.83],[116.71,-20.7],[117.44,-20.75],[119.25,-19.95],[120.86,-19.68],[122.24,-18.2],[122.31,-17.25],[123.01,-16.41],[123.43,-17.27],[123.86,-17.07],[123.5,-16.6],[123.82,-16.11],[124.26,-16.33],[124.38,-15.57],[125.69,-14.23],[126.13,-14.35],[126.14,-14.1],[127.07,-13.82],[128.36,-14.87],[129.62,-14.97],[129.41,-14.42],[130.34,-13.36],[130.18,-13.11],[130.62,-12.54],[131.22,-12.18],[132.58,-12.11],[132.56,-11.6],[131.82,-11.27],[132.36,-11.13],[135.3,-12.25],[136.49,-11.86],[136.95,-12.35],[136.31,-13.29],[135.96,-13.32],[136.08,-13.72],[135.5,-15.0],[140.22,-17.71],[140.88,-17.37],[141.27,-16.39],[141.7,-15.04],[141.69,-12.41],[142.52,-10.67],[143.52,-12.83],[143.92,-14.55],[144.56,-14.17],[145.37,-14.98],[145.49,-16.29],[146.39,-18.96],[148.85,-20.39]],[[120.72,-10.24],[118.97,-9.56],[119.9,-9.36],[120.78,-9.97],[120.72,-10.24]],[[124.44,-10.14],[123.46,-10.24],[123.98,-9.29],[125.09,-8.66],[127.34,-8.4],[125.09,-9.39],[124.44,-10.14]],[[120.72,-8.24],[122.01,-8.46],[122.9,-8.09],[122.76,-8.65],[119.92,-8.81],[119.92,-8.44],[120.72,-8.24]],[[134.21,-6.9],[134.29,-5.78],[134.5,-5.45],[134.72,-6.21],[134.21,-6.9]],[[127.0,-3.13],[127.25,-3.46],[126.87,-3.79],[126.18,-3.61],[125.99,-3.18],[127.0,-3.13]],[[128.14,-2.84],[130.47,-3.09],[130.83,-3.86],[129.99,-3.45],[127.9,-3.39],[128.14,-2.84]],[[122.45,-3.19],[122.27,-3.53],[123.17,-4.68],[123.16,-5.34],[122.63,-5.63],[122.24,-5.28],[122.72,-4.46],[121.74,-4.85],[121.49,-4.57],[121.62,-4.19],[120.9,-3.6],[120.97,-2.63],[120.31,-2.93],[120.43,-5.53],[119.8,-5.67],[119.37,-5.38],[119.65,-4.46],[119.5,-3.49],[119.08,-3.49],[118.77,-2.8],[120.04,0.57],[120.89,1.31],[124.08,0.92],[125.07,1.64],[125.24,1.42],[124.44,0.43],[120.18,0.24],[120.04,-0.52],[120.94,-1.41],[121.48,-0.96],[123.34,-0.62],[123.26,-1.08],[122.82,-0.93],[122.39,-1.52],[121.51,-1.9],[122.45,-3.19]],[[128.64,0.26],[128.12,0.36],[127.97,-0.25],[128.38,-0.78],[128.1,-0.9],[127.4,1.01],[127.93,2.17],[128.0,1.63],[128.59,1.54],[128.64,0.26]],[[122.09,6.9],[121.92,7.19],[122.31,8.03],[123.49,8.69],[123.84,8.24],[124.6,8.51],[124.76,8.96],[125.47,8.99],[125.41,9.76],[126.22,9.29],[126.54,7.19],[126.2,6.27],[125.83,7.29],[125.36,6.79],[125.68,6.05],[125.4,5.58],[124.22,6.16],[123.94,6.89],[124.24,7.36],[123.61,7.83],[122.09,6.9]],[[119.69,10.55],[118.5,9.32],[117.17,8.37],[119.51,11.37],[119.69,10.55]],[[123.0,9.02],[122.38,9.71],[122.95,10.88],[123.5,10.94],[123.34,10.27],[124.08,11.23],[123.98,10.28],[123.0,9.02]],[[122.0,10.44],[121.88,11.89],[123.12,11.58],[122.64,10.74],[122.0,10.44]],[[125.78,11.05],[125.01,11.31],[125.28,10.36],[124.8,10.13],[124.76,10.84],[124.46,10.89],[124.3,11.5],[124.89,11.42],[124.88,11.79],[124.27,12.56],[125.23,12.54],[125.78,11.05]],[[121.18,13.43],[121.53,13.07],[121.26,12.21],[120.32,13.47],[121.18,13.43]],[[123.86,13.24],[124.18,13.0],[124.08,12.54],[122.93,13.55],[122.67,13.19],[122.03,13.78],[120.63,13.86],[120.99,14.53],[120.69,14.76],[120.56,14.4],[120.07,14.97],[119.88,16.36],[120.29,16.03],[120.72,18.51],[121.94,18.22],[122.25,18.48],[122.52,17.09],[122.25,16.26],[121.66,15.93],[121.73,14.33],[122.7,14.34],[123.95,13.78],[123.86,13.24]],[[121.95,25.0],[121.18,22.79],[120.75,21.97],[120.11,23.56],[121.5,25.3],[121.95,25.0]],[[133.79,33.52],[133.28,33.29],[133.01,32.7],[132.36,32.99],[132.37,33.46],[132.92,34.06],[133.49,33.94],[133.9,34.36],[134.64,34.15],[134.77,33.81],[134.2,33.2],[133.79,33.52]],[[130.69,31.03],[130.2,31.42],[130.45,32.32],[129.81,32.61],[129.41,33.3],[130.35,33.6],[132.62,35.43],[134.61,35.73],[135.68,35.53],[136.72,37.3],[137.39,36.83],[139.43,38.22],[140.05,39.44],[139.88,40.56],[140.31,41.2],[141.37,41.38],[141.91,39.99],[141.88,39.18],[140.96,38.17],[140.98,37.14],[140.6,36.34],[140.77,35.84],[140.25,35.14],[138.98,34.67],[137.22,34.61],[135.79,33.46],[135.12,33.85],[135.08,34.6],[130.99,33.89],[132.0,33.15],[131.33,31.45],[130.69,31.03]],[[166.74,-22.4],[164.83,-21.15],[164.03,-20.11],[165.02,-20.46],[167.12,-22.16],[166.74,-22.4]],[[177.29,-17.72],[178.37,-17.34],[178.72,-17.63],[178.55,-18.15],[177.38,-18.16],[177.29,-17.72]],[[180.0,-16.56],[178.73,-17.01],[178.6,-16.64],[180.0,-16.07],[180.0,-16.56]],[[167.27,-15.74],[166.65,-15.39],[166.63,-14.63],[167.11,-14.93],[167.27,-15.74]],[[160.85,-9.87],[159.85,-9.79],[159.7,-9.24],[160.36,-9.4],[160.85,-9.87]],[[161.53,-9.78],[160.58,-8.32],[160.92,-8.32],[161.68,-9.6],[161.53,-9.78]],[[154.73,-5.9],[154.65,-5.04],[156.02,-6.54],[155.88,-6.82],[155.6,-6.92],[154.73,-5.9]],[[147.65,-6.08],[147.89,-6.61],[146.97,-6.72],[147.19,-7.39],[148.08,-8.04],[148.73,-9.1],[149.31,-9.07],[149.27,-9.51],[150.8,-10.29],[150.69,-10.58],[147.91,-10.13],[146.57,-8.94],[146.05,-8.07],[144.74,-7.63],[143.29,-8.25],[143.41,-8.98],[142.63,-9.33],[141.03,-9.12],[140.14,-8.3],[139.13,-8.1],[138.88,-8.38],[137.61,-8.41],[138.04,-7.6],[138.67,-7.32],[137.93,-5.39],[135.16,-4.46],[133.66,-3.54],[132.98,-4.11],[132.75,-3.31],[131.99,-2.82],[133.78,-2.48],[133.7,-2.21],[132.23,-2.21],[131.84,-1.62],[130.94,-1.43],[130.52,-0.94],[132.38,-0.37],[133.99,-0.78],[134.42,-2.77],[135.46,-3.37],[136.29,-2.31],[137.44,-1.7],[138.33,-1.7],[144.58,-3.86],[145.83,-4.88],[145.98,-5.47],[147.65,-6.08]],[[150.81,-5.46],[151.65,-4.76],[151.54,-4.17],[152.34,-4.31],[151.98,-5.48],[150.24,-6.32],[148.32,-5.75],[148.4,-5.44],[149.85,-5.51],[150.14,-5.0],[150.24,-5.53],[150.81,-5.46]],[[152.83,-4.77],[152.41,-3.79],[150.66,-2.74],[150.94,-2.5],[152.24,-3.24],[153.02,-3.98],[153.14,-4.5],[152.83,-4.77]],[[169.58,68.69],[170.82,69.01],[170.01,69.65],[170.36,70.0],[175.72,69.88],[180.0,68.96],[180.0,64.98],[178.71,64.53],[177.41,64.61],[178.31,64.08],[179.49,62.57],[179.23,62.3],[177.36,62.52],[173.68,61.65],[170.7,60.34],[170.33,59.88],[168.9,60.57],[166.3,59.79],[165.84,60.16],[164.88,59.73],[163.54,59.87],[163.22,59.21],[162.02,58.24],[162.05,57.84],[163.19,57.62],[163.06,56.16],[162.13,56.12],[161.7,55.29],[162.12,54.86],[160.37,54.34],[160.02,53.2],[158.53,52.96],[158.23,51.94],[156.79,51.01],[155.43,55.38],[155.91,56.77],[156.76,57.36],[156.81,57.83],[158.36,58.06],[161.87,60.34],[163.67,61.14],[164.47,62.55],[163.26,62.47],[162.66,61.64],[160.12,60.54],[159.3,61.77],[156.72,61.43],[154.22,59.76],[155.04,59.15],[151.27,58.78],[151.34,59.5],[149.78,59.66],[148.54,59.16],[145.49,59.34],[142.2,59.04],[135.13,54.73],[136.7,54.6],[137.19,53.98],[138.16,53.76],[138.8,54.25],[139.9,54.19],[141.35,53.09],[141.38,52.24],[140.6,51.24],[140.06,48.45],[138.22,46.31],[134.87,43.4],[133.54,42.81],[132.91,42.8],[132.28,43.28],[129.97,41.94],[129.67,41.6],[129.71,40.88],[127.53,39.76],[127.39,39.21],[128.35,38.61],[129.46,36.78],[129.47,35.63],[129.09,35.08],[126.49,34.39],[126.56,35.68],[126.12,36.73],[126.86,36.89],[126.17,37.75],[125.69,37.94],[125.28,37.67],[124.71,38.11],[125.22,38.67],[125.32,39.55],[124.27,39.93],[121.05,38.9],[121.59,39.36],[121.38,39.75],[122.17,40.42],[121.64,40.95],[119.64,39.9],[119.02,39.25],[118.04,39.2],[117.53,38.74],[118.06,38.06],[118.88,37.9],[118.91,37.45],[119.7,37.16],[120.82,37.87],[122.36,37.45],[122.52,36.93],[121.1,36.65],[119.15,34.91],[120.23,34.36],[121.91,31.69],[121.89,30.95],[121.26,30.68],[121.5,30.14],[122.09,29.83],[121.68,28.23],[121.13,28.14],[118.66,24.55],[115.89,22.78],[114.76,22.67],[114.15,22.22],[113.81,22.55],[113.24,22.05],[110.79,21.4],[110.44,20.34],[109.89,20.28],[109.63,21.01],[109.86,21.4],[108.52,21.72],[106.72,20.7],[105.88,19.75],[105.66,19.06],[107.36,16.7],[108.88,15.28],[109.34,13.43],[109.2,11.67],[105.16,8.6],[104.8,9.24],[105.08,9.92],[104.33,10.49],[103.5,10.63],[102.59,12.19],[101.69,12.65],[100.83,12.63],[100.98,13.41],[100.1,13.41],[100.02,12.31],[99.15,9.96],[99.22,9.24],[99.87,9.21],[100.46,7.43],[102.96,5.52],[103.38,4.86],[103.5,2.79],[104.23,1.29],[103.52,1.23],[101.39,2.76],[100.2,5.31],[100.09,6.46],[98.5,8.38],[98.34,7.79],[98.15,8.35],[98.76,11.44],[98.43,12.03],[98.51,13.12],[98.1,13.64],[97.16,16.93],[95.37,15.71],[94.19,16.04],[94.53,17.28],[94.0,18.69],[94.0,70.0],[159.75,70.0],[159.71,69.72],[160.94,69.44],[167.84,69.58],[169.58,68.69]],[[143.14,44.51],[144.61,43.96],[145.32,44.38],[145.54,43.26],[144.06,42.99],[143.18,42.0],[141.61,42.68],[141.07,41.58],[139.96,41.57],[139.82,42.56],[140.31,43.33],[141.38,43.39],[141.97,45.55],[143.14,44.51]],[[141.68,53.3],[142.61,53.76],[142.21,54.23],[142.65,54.37],[143.26,52.74],[143.24,51.76],[144.65,48.98],[143.17,49.31],[142.56,47.86],[143.53,46.84],[143.51,46.14],[142.75,46.74],[142.09,45.97],[141.9,48.86],[142.18,50.95],[141.59,51.94],[141.68,53.3]]];
+
+const LEGS=[
+  {kind:"cap",short:"✈ DEC 12<br>DEPART SFO",label:"Dec 12 — Depart SFO",note:"United UA29 · SFO → SIN · 10:40 AM, overnight"},
+  {leg:"singapore",city:"Singapore",d1:13,d2:14,nights:2,hotel:"Raffles Singapore",via:"✈ United UA29 — lands 8:15 PM Dec 13"},
+  {leg:"thailand",city:"Koh Samui",d1:15,d2:19,nights:5,hotel:"Banyan Tree — Ocean View Pool Villa",via:"✈ Scoot TR642 — 10:00 AM → 11:00 AM"},
+  {leg:"tokyo",city:"Tokyo",d1:20,d2:24,nights:5,hotel:"Hotel TBD",via:"✈ Bangkok Airways PG122 + Thai TG660 — lands 10:05 PM"},
+  {leg:"kyoto",city:"Kyoto",d1:25,d2:29,nights:5,hotel:"Hotel TBD",via:"🚄 Shinkansen — 2:30 PM → 4:44 PM"},
+  {kind:"cap",short:"✈ DEC 30<br>FLY HOME",label:"Dec 30 — Fly home",note:"United UA34 · KIX → SFO · 6:35 PM, lands 11:50 AM"},
+];
+
+const CATS={Flights:"#3730a3",Lodging:"#0f766e",Activities:"#c2410c",Food:"#b45309",Transport:"#6b7280",Other:"#9d174d"};
+const WEEKDAY_DEC1=2, DAYS_IN_DEC=31;
+const WD_SHORT=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const WD_LONG=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const wdOf=d=>(WEEKDAY_DEC1+(d-1))%7;
+const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const fmt$=n=>"$"+Math.round(n||0).toLocaleString("en-US");
+const modeGlyph=m=> m==="train"?"🚄":(m==="boat"?"⛴":"✈");
+const noteKey=(d,k)=>`planA-${d}-${k}`;
+const EXP_KEY="planA-expenses";
+
+const flash=document.getElementById("saveflash");let ft;
+function showSaved(){flash.classList.add("show");clearTimeout(ft);ft=setTimeout(()=>flash.classList.remove("show"),900);}
+
+/* ---- Map ---- */
+const GEO={"SFO":[37.62,-122.38],"Singapore":[1.35,103.82],"Hong Kong":[22.32,114.17],"Koh Samui":[9.51,100.06],"Chiang Mai":[18.79,98.99],"Tokyo":[35.68,139.77],"Kyoto":[35.01,135.77]};
+const LBL={"SFO":[-10,4,"end"],"Singapore":[10,4,"start"],"Hong Kong":[11,-7,"start"],"Koh Samui":[11,11,"start"],"Chiang Mai":[-10,-7,"end"],"Tokyo":[11,-7,"start"],"Kyoto":[-10,15,"end"]};
+const lonP=lon=>lon<-40?lon+360:lon;
+function renderMap(){
+  const route=PLAN.route;
+  const W=680,H=456,mL=40,mR=40,mT=20,mB=28,pW=W-mL-mR,pH=H-mT-mB,lonMin=94,lonMax=244,latMin=-32,latMax=70;
+  const X=lon=>mL+(lonP(lon)-lonMin)/(lonMax-lonMin)*pW;const Y=lat=>mT+(latMax-lat)/(latMax-latMin)*pH;
+  let grat="";
+  for(let lo=100;lo<=240;lo+=20){const x=X(lo);grat+=`<line x1="${x}" y1="${mT}" x2="${x}" y2="${mT+pH}" stroke="#cfdde0" stroke-width="1"/>`;}
+  for(let la=-30;la<=70;la+=20){const y=Y(la);grat+=`<line x1="${mL}" y1="${y}" x2="${mL+pW}" y2="${y}" stroke="#cfdde0" stroke-width="1"/>`;}
+  let land="";
+  LANDREAL.forEach(r=>{ land+=`<path d="M `+r.map(p=>`${X(p[0]).toFixed(1)} ${Y(p[1]).toFixed(1)}`).join(" L ")+` Z" fill="#ece3cf" stroke="#cdbfa2" stroke-width="0.7"/>`; });
+  land+=`<circle cx="${X(100.06).toFixed(1)}" cy="${Y(9.51).toFixed(1)}" r="2.4" fill="#ece3cf" stroke="#cdbfa2" stroke-width="0.7"/>`;
+  const xdl=X(180);
+  const dateline=`<line x1="${xdl}" y1="${mT}" x2="${xdl}" y2="${mT+pH}" stroke="#8bb0b6" stroke-width="1.1" stroke-dasharray="3 4"/>`;
+  let arcs="";
+  for(let i=0;i<route.length-1;i++){
+    const a=route[i][0],b=route[i+1][0],ga=GEO[a],gb=GEO[b];
+    const x1=X(ga[1]),y1=Y(ga[0]),x2=X(gb[1]),y2=Y(gb[0]),col=REGIONS[route[i+1][1]].color;
+    const isTrain=(a==="Tokyo"&&b==="Kyoto")||(a==="Kyoto"&&b==="Tokyo");
+    if(isTrain){ arcs+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="3"/>`; }
+    else{ const mx=(x1+x2)/2,my=(y1+y2)/2,dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1,off=Math.min(46,len*0.16);
+      const cx=mx+(-dy/len)*off,cy=my+(dx/len)*off;
+      arcs+=`<path d="M${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}" fill="none" stroke="${col}" stroke-width="2.2" stroke-dasharray="1 6" stroke-linecap="round"/>`; }
+  }
+  let dots="",labels="",seen={};
+  route.forEach(h=>{ const name=h[0]; if(seen[name])return; seen[name]=1;
+    const g=GEO[name],x=X(g[1]),y=Y(g[0]),col=REGIONS[h[1]].color,lp=LBL[name]||[10,4,"start"];
+    dots+=`<circle cx="${x}" cy="${y}" r="4.8" fill="${col}" stroke="#fffdf8" stroke-width="1.7"/>`;
+    labels+=`<text x="${x+lp[0]}" y="${y+lp[1]}" text-anchor="${lp[2]}" font-family="Instrument Sans,Helvetica Neue,Arial,sans-serif" font-size="14" font-weight="700" fill="#3a332c">${esc(name)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" class="tmap" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0.5" y="0.5" width="${W-1}" height="${H-1}" rx="12" fill="#e4edee" stroke="#d9cdb9"/>
+    ${grat}${land}${dateline}
+    <text x="${X(200)}" y="${Y(58)}" text-anchor="middle" font-family="Instrument Sans,Helvetica Neue,Arial,sans-serif" font-size="10.5" letter-spacing="3" fill="#a7bcc0">PACIFIC OCEAN</text>
+    ${arcs}${dots}${labels}
+    <text x="${W-10}" y="${H-10}" text-anchor="end" font-family="Instrument Sans,Helvetica Neue,Arial,sans-serif" font-size="8.5" fill="#b0a48f">not to scale · ✈ dashed · 🚄 solid</text>
+  </svg>`;
+}
+
+/* ---- Cost panel ---- */
+function renderCostPanel(){
+  document.getElementById("costPanel").innerHTML=`<div class="cost-panel" id="cpOpen" title="Open cost tracker">
+    <div class="cp-tots">
+      <div class="cp-t"><span class="cp-l">Total cash</span><b id="statCash">$0</b></div>
+      <div class="cp-t pts"><span class="cp-l">Total points</span><b id="statPts">0</b></div>
+    </div>
+    <div id="cpCats"></div>
+    <div class="cp-hint">Tap to add or edit expenses ▸</div></div>`;
+  document.getElementById("cpOpen").onclick=openCost;
+  updateStatTotals();
+}
+function totals(){ const a=EXP; return [a.reduce((s,e)=>s+(+e.cash||0),0), a.reduce((s,e)=>s+(+e.points||0),0)]; }
+function updateStatTotals(){
+  const [c,p]=totals();
+  document.getElementById("statCash").textContent=fmt$(c);
+  document.getElementById("statPts").textContent=p.toLocaleString();
+  const cats={};EXP.forEach(e=>{const k=e.cat||"Other";(cats[k]=cats[k]||{cash:0,pts:0});cats[k].cash+=(+e.cash||0);cats[k].pts+=(+e.points||0);});
+  const el=document.getElementById("cpCats");
+  if(el) el.innerHTML=Object.keys(CATS).filter(k=>cats[k]).map(k=>{
+    const v=cats[k];const parts=[];if(v.cash)parts.push(fmt$(v.cash));if(v.pts)parts.push(v.pts.toLocaleString()+" pts");
+    return `<div class="cp-cat"><span class="cp-dot" style="background:${CATS[k]}"></span><span class="cp-name">${k}</span><span class="cp-val">${parts.join(" · ")||"—"}</span></div>`;
+  }).join("");
+}
+
+/* ---- Trip ribbon ---- */
+function renderRibbon(){
+  const r=document.getElementById("ribbon");
+  r.innerHTML=LEGS.map(L=>{
+    if(L.kind==="cap") return `<div class="rib-cap">${L.short}</div>`;
+    const c=REGIONS[L.leg].color, tbd=/TBD/.test(L.hotel);
+    return `<div class="rib-seg" style="background:${c};flex-grow:${L.nights}" data-day="${L.d1}" title="Open Dec ${L.d1}">
+      <b>${esc(L.city)}</b><span>Dec ${L.d1}–${L.d2+1} · ${L.nights} nights</span><i>${tbd?"⌂ hotel TBD":"⌂ "+esc(L.hotel)}</i></div>`;
+  }).join("");
+  r.querySelectorAll(".rib-seg").forEach(s=>s.onclick=()=>openDay(+s.dataset.day));
+}
+
+/* ---- Legend ---- */
+function renderLegend(){
+  const order=["singapore","thailand","tokyo","kyoto"];
+  document.getElementById("legend").innerHTML=
+    order.map(k=>`<span class="li"><span class="dot" style="background:${REGIONS[k].color}"></span>${REGIONS[k].label.split(",")[0]}</span>`).join("")+
+    `<span class="li"><span class="dot" style="background:repeating-linear-gradient(-45deg,#9aa1ab 0 3px,#d6d9dd 3px 6px)"></span>Travel day</span>`;
+}
+
+/* ---- Calendar ---- */
+function hotelFor(d,info){
+  if(info.hotel) return {name:info.hotel,tbd:false};
+  if((info.leg==="tokyo"||info.leg==="kyoto") && !/Home/.test(info.city)) return {name:"Hotel TBD",tbd:true};
+  return null;
+}
+function renderCalendar(){
+  const g=document.getElementById("grid"); let h="";
+  for(let i=0;i<WEEKDAY_DEC1;i++) h+=`<div class="cell void"></div>`;
+  for(let d=1;d<=DAYS_IN_DEC;d++){
+    const info=PLAN.days[d];
+    if(!info){ h+=`<div class="cell off"><div class="num">${d}</div></div>`; continue; }
+    const c=REGIONS[info.leg].color, ht=hotelFor(d,info);
+    let inner=`<div class="top"><span class="num">${d}</span><span class="ico">${info.ico}</span></div>`;
+    inner+=`<div class="city">${esc(info.city)}</div>`;
+    if(info.move) inner+=`<span class="move">${modeGlyph(info.move.mode)} ${esc(info.move.brand)}</span>`;
+    if(ht) inner+=`<div class="hotel${ht.tbd?" tbd":""}">⌂ ${esc(ht.name)}</div>`;
+    inner+=`<div class="sub">${esc(info.nights)}</div>`;
+    h+=`<div class="cell trip${info.move?" travel":""}" style="--c:${c}" data-day="${d}">${inner}</div>`;
+  }
+  g.innerHTML=h;
+  g.querySelectorAll(".cell.trip").forEach(cell=>cell.onclick=()=>openDay(+cell.dataset.day));
+}
+
+/* ---- Mobile agenda ---- */
+function renderAgenda(){
+  const a=document.getElementById("agenda"); let h="";
+  for(let d=1;d<=DAYS_IN_DEC;d++){
+    const info=PLAN.days[d]; if(!info) continue;
+    const c=REGIONS[info.leg].color, ht=hotelFor(d,info);
+    h+=`<div class="ag-row${info.move?" travel":""}" style="--c:${c}" data-day="${d}">
+      <div class="ag-date"><b>${d}</b><span>${WD_SHORT[wdOf(d)]}</span></div>
+      <div class="ag-main">
+        <div class="ag-city">${esc(info.city)} <span class="ag-ico">${info.ico}</span></div>
+        ${info.move?`<span class="move">${modeGlyph(info.move.mode)} ${esc(info.move.brand)}</span>`:""}
+        ${ht?`<div class="hotel${ht.tbd?" tbd":""}">\u2302 ${esc(ht.name)}</div>`:""}
+        <div class="ag-sub">${esc(info.nights)}</div>
+      </div></div>`;
+  }
+  a.innerHTML=h;
+  a.querySelectorAll(".ag-row").forEach(r=>r.onclick=()=>openDay(+r.dataset.day));
+}
+
+/* ---- Day map (Leaflet) ---- */
+const CITY={singapore:{c:[1.2966,103.8522],z:13},thailand:{c:[9.512,100.043],z:11},tokyo:{c:[35.6812,139.7671],z:12},kyoto:{c:[35.0116,135.7681],z:13}};
+const HOTELGEO={ // hotel pin coords (approximate — adjust here if off)
+  singapore:{name:"Raffles Singapore",lat:1.2949,lng:103.8544},
+  thailand:{name:"Banyan Tree Koh Samui",lat:9.47285,lng:100.06933},
+};
+const PLACES_KEY="planA-places";
+let PLACES;
+try{PLACES=JSON.parse(localStorage.getItem(PLACES_KEY))||{};}catch(e){PLACES={};}
+function savePlaces(){localStorage.setItem(PLACES_KEY,JSON.stringify(PLACES));showSaved();}
+let dayMap=null;
+function mapSectionHTML(d,info){
+  if(!CITY[info.leg]) return "";
+  return `<div id="dayMapWrap"><div id="dayMap"></div><div id="plList"></div>
+    <div class="pl-add"><input class="n" id="plName" placeholder="Place name">
+    <input class="c" id="plCoord" placeholder="lat, lng"><button class="pl-btn" id="plAdd">Add pin</button></div>
+    <div class="map-note">Coords: in Google Maps, long-press a spot &rarr; tap the numbers &rarr; copy &rarr; paste here.</div></div>`;
+}
+function renderPlaceList(d){
+  const el=document.getElementById("plList"); if(!el)return;
+  el.innerHTML=(PLACES[d]||[]).map((pl,i)=>`<div class="pl-row"><span class="pl-num">${i+1}</span><span>${esc(pl.name)}</span>
+    <button class="pl-del" data-i="${i}" title="Remove pin">&times;</button></div>`).join("");
+  el.querySelectorAll(".pl-del").forEach(b=>b.onclick=()=>{PLACES[d].splice(+b.dataset.i,1);savePlaces();renderPlaceList(d);drawDayMap(d);});
+}
+function drawDayMap(d){
+  const info=PLAN.days[d], cfg=CITY[info.leg];
+  const el=document.getElementById("dayMap"); if(!el||!cfg)return;
+  if(typeof L==="undefined"){el.innerHTML='<div class="map-note" style="padding:12px">Map needs an internet connection to load.</div>';return;}
+  if(dayMap){dayMap.remove();dayMap=null;}
+  dayMap=L.map(el,{scrollWheelZoom:false}).setView(cfg.c,cfg.z);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{attribution:"&copy; OpenStreetMap &copy; CARTO",subdomains:"abcd",maxZoom:20}).addTo(dayMap);
+  const mkIcon=(html,bg)=>L.divIcon({className:"",html:`<div class="pin" style="background:${bg}">${html}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
+  const pts=[];
+  const hg=HOTELGEO[info.leg];
+  if(hg){L.marker([hg.lat,hg.lng],{icon:mkIcon("⌂",REGIONS[info.leg].color)}).addTo(dayMap).bindPopup(esc(hg.name));pts.push([hg.lat,hg.lng]);}
+  (PLACES[d]||[]).forEach((pl,i)=>{L.marker([pl.lat,pl.lng],{icon:mkIcon(String(i+1),"#3730a3")}).addTo(dayMap).bindPopup(esc(pl.name));pts.push([pl.lat,pl.lng]);});
+  if(pts.length>1)dayMap.fitBounds(pts,{padding:[36,36]});
+  else if(pts.length===1)dayMap.setView(pts[0],14);
+  setTimeout(()=>{if(dayMap)dayMap.invalidateSize();},60);
+}
+function wireMapUI(d){
+  const btn=document.getElementById("plAdd"); if(!btn)return;
+  btn.onclick=()=>{
+    const name=document.getElementById("plName").value.trim();
+    const m=document.getElementById("plCoord").value.trim().match(/(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)/);
+    if(!name||!m)return;
+    (PLACES[d]=PLACES[d]||[]).push({name:name,lat:+m[1],lng:+m[2]});
+    savePlaces();
+    document.getElementById("plName").value="";document.getElementById("plCoord").value="";
+    renderPlaceList(d);drawDayMap(d);
+  };
+  renderPlaceList(d);drawDayMap(d);
+}
+
+/* ---- Day modal ---- */
+const scrim=document.getElementById("scrim");
+const FIELDS=[["transport","✈︎ Transport","Flights, trains, transfers, times…"],["stay","⌂ Hotel / Stay","Where you're sleeping, check-in / out…"],["plans","◎ Plans & itinerary","Sights, tours, bookings…"],["food","☕ Food & reservations","Restaurants, reservations…"],["notes","✎ Notes","Tickets, packing, reminders…"]];
+function openDay(d){
+  const info=PLAN.days[d], c=REGIONS[info.leg].color;
+  document.querySelector("#scrim .modal").style.borderTopColor=c;
+  document.getElementById("mEye").textContent=`${WD_LONG[wdOf(d)]} · December ${d}`;
+  const ce=document.getElementById("mCity"); ce.textContent=info.city; ce.style.color=c;
+  document.getElementById("mSub").innerHTML=`<span style="color:${c};font-weight:700">${REGIONS[info.leg].label}</span><span>${esc(info.nights)}</span>`;
+  document.getElementById("mBody").innerHTML=mapSectionHTML(d,info)+FIELDS.map(f=>{
+    const saved=localStorage.getItem(noteKey(d,f[0]));
+    const val=(saved!=null)?saved:((info.seed&&info.seed[f[0]])||"");
+    return `<div class="fld"><label>${f[1]}</label><textarea data-k="${f[0]}" placeholder="${f[2]}">${esc(val)}</textarea></div>`;
+  }).join("");
+  document.querySelectorAll("#mBody textarea").forEach(ta=>{
+    const grow=()=>{ta.style.height="auto";ta.style.height=(ta.scrollHeight+2)+"px";}; grow();
+    ta.addEventListener("input",()=>{grow();localStorage.setItem(noteKey(d,ta.dataset.k),ta.value);showSaved();});
+  });
+  scrim.classList.add("open");
+  wireMapUI(d);
+}
+document.getElementById("mClose").onclick=()=>scrim.classList.remove("open");
+scrim.addEventListener("click",e=>{if(e.target===scrim)scrim.classList.remove("open");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){scrim.classList.remove("open");scrimCost.classList.remove("open");}});
+
+/* ---- Cost tracker ---- */
+let EXP;
+try{EXP=JSON.parse(localStorage.getItem(EXP_KEY));}catch(e){EXP=null;}
+if(!Array.isArray(EXP)) EXP=PLAN.expSeed.map(x=>Object.assign({},x));
+function saveExp(){localStorage.setItem(EXP_KEY,JSON.stringify(EXP));showSaved();updateStatTotals();}
+const scrimCost=document.getElementById("scrimCost");
+function openCost(){ renderCostModal(); scrimCost.classList.add("open"); }
+document.getElementById("cClose").onclick=()=>scrimCost.classList.remove("open");
+scrimCost.addEventListener("click",e=>{if(e.target===scrimCost)scrimCost.classList.remove("open");});
+document.getElementById("ctAdd").onclick=()=>{EXP.push({desc:"",cat:"Other",cash:0,points:0,prog:""});saveExp();renderCostModal();};
+function renderCostModal(){ renderCostTable(); renderCostSummary(); }
+function renderCostTable(){
+  const t=document.getElementById("ctTable");
+  let h=`<thead><tr><th>Description</th><th class="catcell">Category</th><th class="numcell num">Cash&nbsp;$</th><th class="numcell num">Points</th><th>Program</th><th></th></tr></thead><tbody>`;
+  EXP.forEach((e,i)=>{
+    h+=`<tr>
+      <td data-label="Item"><input value="${esc(e.desc)}" data-i="${i}" data-k="desc" placeholder="What is it?"></td>
+      <td class="catcell" data-label="Category"><select data-i="${i}" data-k="cat">${Object.keys(CATS).map(c=>`<option ${c===e.cat?"selected":""}>${c}</option>`).join("")}</select></td>
+      <td class="numcell" data-label="Cash $"><input class="num" type="number" min="0" value="${e.cash||""}" data-i="${i}" data-k="cash" placeholder="0"></td>
+      <td class="numcell" data-label="Points"><input class="num" type="number" min="0" value="${e.points||""}" data-i="${i}" data-k="points" placeholder="0"></td>
+      <td data-label="Program"><input value="${esc(e.prog)}" data-i="${i}" data-k="prog" placeholder="e.g. Chase UR"></td>
+      <td class="delcell"><button class="ct-del" data-del="${i}">×</button></td></tr>`;
+  });
+  t.innerHTML=h+`</tbody>`;
+  t.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",()=>{
+    const i=+el.dataset.i,k=el.dataset.k;
+    EXP[i][k]=(k==="cash"||k==="points")?(parseFloat(el.value)||0):el.value;
+    saveExp();renderCostSummary();
+  }));
+  t.querySelectorAll(".ct-del").forEach(b=>b.onclick=()=>{EXP.splice(+b.dataset.del,1);saveExp();renderCostModal();});
+}
+function renderCostSummary(){
+  const [totCash,totPts]=totals();
+  const prog={};EXP.forEach(e=>{if(+e.points){const p=(e.prog||"").trim()||"Unspecified";prog[p]=(prog[p]||0)+(+e.points);}});
+  const progStr=Object.keys(prog).length?Object.entries(prog).map(([p,v])=>`${p}: ${v.toLocaleString()}`).join(" · "):"No points yet";
+  document.getElementById("ctT").innerHTML=
+    `<div class="ct-tot"><div class="l">Total cash</div><div class="big">${fmt$(totCash)}</div><div class="sub">${EXP.length} line item${EXP.length!==1?"s":""}</div></div>
+     <div class="ct-tot" style="border-top-color:var(--teal)"><div class="l">Total points</div><div class="big">${totPts.toLocaleString()}</div><div class="sub">${progStr}</div></div>`;
+  const cats={};EXP.forEach(e=>{const c=e.cat||"Other";(cats[c]=cats[c]||{cash:0,pts:0});cats[c].cash+=(+e.cash||0);cats[c].pts+=(+e.points||0);});
+  document.getElementById("ctC").innerHTML=Object.keys(CATS).filter(c=>cats[c]).map(c=>{
+    const v=cats[c];const parts=[];if(v.cash)parts.push(fmt$(v.cash));if(v.pts)parts.push(v.pts.toLocaleString()+" pts");
+    return `<div class="ct-cat" style="border-left-color:${CATS[c]}"><div class="cn" style="color:${CATS[c]}">${c}</div><div class="cv">${parts.join(" · ")||"—"}</div></div>`;
+  }).join("");
+}
+
+/* ---- Boot ---- */
+document.getElementById("map").innerHTML=renderMap();
+renderRibbon();
+renderLegend();
+renderCalendar();
+renderAgenda();
+renderCostPanel();
+</script>
+</body>
+</html>
