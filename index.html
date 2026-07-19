@@ -254,28 +254,13 @@
   .ct-cat{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 12px;border-left:4px solid;min-width:120px}
   .ct-cat .cn{font-family:var(--sans);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
   .ct-cat .cv{font-family:var(--sans);font-size:12px;color:var(--ink-soft);margin-top:3px}
-  table.ct{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  table.ct th{font-family:var(--sans);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);background:#fbf6ec}
-  table.ct td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
-  table.ct tr:last-child td{border-bottom:none}
-  table.ct input,table.ct select{width:100%;border:1px solid transparent;border-radius:6px;background:transparent;font-family:inherit;font-size:13.5px;color:var(--ink);padding:5px 6px}
-  table.ct input:focus,table.ct select:focus{outline:none;border-color:var(--rule);background:#fffef9}
-  table.ct input.num{font-family:var(--sans);text-align:right}
-  table.ct th.num{text-align:right}
-  table.ct td.numcell{width:100px}table.ct td.catcell{width:118px}
-  .ct-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:17px;line-height:1;padding:2px 6px}
-  .ct-add{font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;background:var(--ink);color:#fff;border:none;border-radius:8px;padding:8px 15px;margin-top:11px}
-  @media(max-width:600px){
-    table.ct,table.ct tbody,table.ct tr,table.ct td{display:block;width:100%}
-    table.ct thead{display:none}
-    table.ct{border:none;background:transparent}
-    table.ct tr{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:10px}
-    table.ct td{border:none;padding:3px 0;display:flex;gap:10px}
-    table.ct td::before{content:attr(data-label);flex:0 0 80px;font-family:var(--sans);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
-    table.ct td.delcell{justify-content:flex-end}table.ct td.delcell::before{content:none}
-    table.ct input,table.ct select{border:1px solid var(--line);background:#fffef9;flex:1;width:auto}
-    table.ct input.num{text-align:left}
-  }
+  .ct-mlist{display:flex;flex-direction:column;gap:8px}
+  .ce-row{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;padding:9px 12px}
+  .ce-desc{font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.45}
+  .ce-meta{display:flex;gap:10px;margin-top:3px;font-family:var(--sans);font-size:11px;color:var(--faint);align-items:baseline}
+  .ce-cat{font-weight:700;color:var(--c);text-transform:uppercase;letter-spacing:.06em;font-size:9.5px}
+  .ce-amt{margin-left:auto;font-weight:700;color:var(--ink-soft)}
+
   #saveflash{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--teal);color:#fff;font-family:var(--sans);font-size:12px;padding:7px 16px;border-radius:20px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:70}
   #saveflash.show{opacity:1}
 
@@ -420,11 +405,10 @@
 
 <div class="scrim" id="scrimCost"><div class="modal modal-wide">
   <div class="m-head"><button class="m-close" id="cClose">&times;</button>
-    <div class="m-eyebrow">Cost tracker</div><div class="m-city" id="cTitle" style="color:#0f766e">Plan A</div></div>
+    <div class="m-eyebrow">Cost tracker</div></div>
   <div class="m-body">
     <div class="ct-totals" id="ctT"></div><div class="ct-cats" id="ctC"></div>
-    <div style="overflow-x:auto"><table class="ct" id="ctTable"></table></div>
-    <button class="ct-add" id="ctAdd">+ Add expense</button>
+    <div class="ct-mlist" id="ctM"></div>
   </div>
 </div></div>
 <div class="scrim" id="loginScrim"><div class="login-card">
@@ -921,45 +905,20 @@ async function fetchExpenses(){
   const {data,error}=await sb.from("expenses").select("*").order("created_at");
   if(!error&&Array.isArray(data))EXP=data;
 }
-const EXP_TIMERS={};
-function queueExpSave(id,k,v){
-  clearTimeout(EXP_TIMERS[id+k]);
-  EXP_TIMERS[id+k]=setTimeout(async()=>{if(sb){await sb.from("expenses").update({[k]:v}).eq("id",id);showSaved();}},600);
-}
+
 const scrimCost=document.getElementById("scrimCost");
 function openCost(){ renderCostModal(); scrimCost.classList.add("open"); }
 document.getElementById("cClose").onclick=()=>scrimCost.classList.remove("open");
 scrimCost.addEventListener("click",e=>{if(e.target===scrimCost)scrimCost.classList.remove("open");});
-document.getElementById("ctAdd").onclick=async()=>{
-  if(!sb||!TRIP)return;
-  const {data,error}=await sb.from("expenses").insert({trip_id:TRIP.id}).select().single();
-  if(!error&&data){EXP.push(data);renderCostModal();}
-};
+
 function renderCostModal(){ renderCostTable(); renderCostSummary(); }
 function renderCostTable(){
-  const t=document.getElementById("ctTable");
-  let h=`<thead><tr><th>Description</th><th class="catcell">Category</th><th class="numcell num">Cash&nbsp;$</th><th class="numcell num">Points</th><th>Program</th><th></th></tr></thead><tbody>`;
-  EXP.forEach((e,i)=>{
-    h+=`<tr>
-      <td data-label="Item"><input value="${esc(e.desc)}" data-id="${e.id}" data-k="desc" placeholder="What is it?"></td>
-      <td class="catcell" data-label="Category"><select data-id="${e.id}" data-k="cat">${Object.keys(CATS).map(c=>`<option ${c===e.cat?"selected":""}>${c}</option>`).join("")}</select></td>
-      <td class="numcell" data-label="Cash $"><input class="num" type="number" min="0" value="${e.cash||""}" data-id="${e.id}" data-k="cash" placeholder="0"></td>
-      <td class="numcell" data-label="Points"><input class="num" type="number" min="0" value="${e.points||""}" data-id="${e.id}" data-k="points" placeholder="0"></td>
-      <td data-label="Program"><input value="${esc(e.prog)}" data-id="${e.id}" data-k="prog" placeholder="e.g. Chase UR"></td>
-      <td class="delcell"><button class="ct-del" data-del="${e.id}">×</button></td></tr>`;
-  });
-  t.innerHTML=h+`</tbody>`;
-  t.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",()=>{
-    const id=el.dataset.id,k=el.dataset.k,row=EXP.find(x=>x.id===id);
-    if(!row)return;
-    row[k]=(k==="cash"||k==="points")?(parseFloat(el.value)||0):el.value;
-    queueExpSave(id,k,row[k]);updateStatTotals();renderCostSummary();
-  }));
-  t.querySelectorAll(".ct-del").forEach(b=>b.onclick=async()=>{
-    const id=b.dataset.del;
-    EXP=EXP.filter(x=>x.id!==id);renderCostModal();updateStatTotals();
-    if(sb){await sb.from("expenses").delete().eq("id",id);showSaved();}
-  });
+  document.getElementById("ctM").innerHTML=EXP.map(e=>{
+    const c=CATS[e.cat]||"#9d174d";
+    const parts=[];if(+e.cash)parts.push(fmt$(e.cash));if(+e.points)parts.push((+e.points).toLocaleString()+" pts"+(e.prog?" · "+e.prog:""));
+    return `<div class="ce-row" style="--c:${c}"><div class="ce-desc">${esc(e.desc)||"—"}</div>
+      <div class="ce-meta"><span class="ce-cat">${esc(e.cat)}</span><span class="ce-amt">${parts.join(" · ")||"—"}</span></div></div>`;
+  }).join("");
 }
 function renderCostSummary(){
   const [totCash,totPts]=totals();
