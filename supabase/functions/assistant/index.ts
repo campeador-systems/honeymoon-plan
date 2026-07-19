@@ -219,9 +219,13 @@ async function runTool(name: string, input: any, db: any, trip: Trip) {
         }
         const url = input.url == null ? null : String(input.url);
         if (url && !url.startsWith("https://")) throw new Error("url must be https");
+        // merge with the existing row so a rename never wipes coordinates or the link
+        const { data: existing } = await db.from("hotels").select("lat,lng,url")
+          .eq("trip_id", trip.id).eq("leg_key", input.leg).maybeSingle();
         const row = {
           trip_id: trip.id, leg_key: input.leg, name: String(input.name).slice(0, 120),
-          lat: input.lat ?? null, lng: input.lng ?? null, url,
+          lat: input.lat ?? existing?.lat ?? null, lng: input.lng ?? existing?.lng ?? null,
+          url: url ?? existing?.url ?? null,
         };
         const { error } = await db.from("hotels").upsert(row, { onConflict: "trip_id,leg_key" });
         if (error) throw error;
