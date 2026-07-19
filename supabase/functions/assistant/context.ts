@@ -26,6 +26,11 @@ CONVENTIONS (follow all of these):
    If the leg already has a hotel (see the trip summary), ask the user to confirm the
    replacement BEFORE calling set_hotel. Booking confirmations in screenshots are the
    usual source — read the hotel name and city from the evidence.
+   HOTEL NAMES: store the short name people actually say, not the legal name — drop
+   corporate wrappers and qualifiers ("InterContinental Grand Stanford Hong Kong" →
+   "InterContinental Hong Kong"; drop "Hotels & Resorts", "by Marriott", "A Luxury
+   Collection Hotel"...). Aim for under ~28 characters, still unambiguous. Use the FULL
+   official name in the geocode query, the short name in set_hotel.
 7. SANITY CHECKS: flag (don't block) real conflicts — double-booked mornings, clashes
    with flight times, closed-day issues visible in the provided material.
 8. DESTRUCTIVE ACTIONS: never delete or move an existing item without the user
