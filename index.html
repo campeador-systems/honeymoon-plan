@@ -441,59 +441,16 @@
 <div id="saveflash" class="sans">Saved ✓</div>
 
 <script>
-const REGIONS={
-  transit:{label:"In transit",color:"#6b7280"},hongkong:{label:"Hong Kong",color:"#0f766e"},
-  thailand:{label:"Koh Samui, Thailand",color:"#c2410c"},tokyo:{label:"Tokyo, Japan",color:"#3730a3"},
-  kyoto:{label:"Kyoto, Japan",color:"#9d174d"},
-};
-const PLAN={
-  stats:[["21","Days"],["4","Destinations"],["3","Countries"],["4","Flights"]],
-  route:[["SFO","transit"],["Hong Kong","hongkong"],["Koh Samui","thailand"],["Tokyo","tokyo"],["Kyoto","kyoto"],["SFO","transit"]],
-  expSeed:[
-    {desc:"United open-jaw ×2 — SFO→HKG (Dec 11) + KIX→SFO (Dec 31), $1,999 each", cat:"Flights", cash:3998, points:0, prog:""},
-    {desc:"Banyan Tree Koh Samui — Ocean View Pool Villa, 6 nights (extend booking!)", cat:"Lodging", cash:0, points:330527, prog:"Chase UR"},
-    {desc:"Bangkok Airways ×2 — Hong Kong → Koh Samui (Dec 14), $312 each", cat:"Flights", cash:624, points:0, prog:""},
-    {desc:"PG122 + TG660 ×2 — Koh Samui → Bangkok → Tokyo (Dec 20), $477 each", cat:"Flights", cash:954, points:0, prog:""},
-    {desc:"Shinkansen ×2 — Tokyo → Kyoto (Dec 26), $83 each", cat:"Transport", cash:166, points:0, prog:""},
-  ],
-  days:{
-    11:{leg:"transit",city:"Depart SFO",ico:"✈️",nights:"Evening departure · 11:15 PM",move:{mode:"plane",brand:"United",from:"transit",to:"hongkong"},seed:{transport:"United · SFO → Hong Kong (HKG). Departs 11:15 PM, nonstop 15h 30m. Lands 6:45 AM Dec 13 (+2 — date line).",stay:"Day at home; red-eye at night."}},
-    12:{leg:"transit",city:"Over the Pacific",ico:"🌏",nights:"In flight · date line",seed:{}},
-    13:{leg:"hongkong",city:"Hong Kong",ico:"🌆",nights:"Night 1 of 1 · arrive 6:45 AM",seed:{transport:"Land HKG 6:45 AM. Full day and night in Hong Kong.",stay:"Hong Kong hotel TBD."}},
-    14:{leg:"hongkong",city:"HK → Koh Samui",ico:"🏝️",nights:"Night 1 of 6 · arrive 7:35 PM",move:{mode:"plane",brand:"Bangkok Airways",from:"hongkong",to:"thailand"},hotel:"Banyan Tree",seed:{transport:"Bangkok Airways · HKG → Koh Samui (USM). 5:05 PM → 7:35 PM, nonstop 3h 30m.",stay:"Banyan Tree Koh Samui — Ocean View Pool Villa. Check in."}},
-    15:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 2 of 6",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
-    16:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 3 of 6",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
-    17:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 4 of 6",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
-    18:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 5 of 6",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
-    19:{leg:"thailand",city:"Koh Samui",ico:"🏝️",nights:"Night 6 of 6",hotel:"Banyan Tree",seed:{stay:"Banyan Tree Koh Samui — Ocean View Pool Villa."}},
-    20:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 1 of 6",move:{mode:"plane",brand:"Bangkok Air → Thai",from:"thailand",to:"tokyo"},seed:{transport:"PG122 · Bangkok Airways · Koh Samui (USM) → Bangkok (BKK). Dep 9:20 AM, arr 10:35 AM. — 3h50m layover — TG660 · Thai Airways · Bangkok (BKK) → Tokyo. Dep 2:25 PM, lands 10:05 PM."}},
-    21:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 2 of 6",seed:{}},
-    22:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 3 of 6",seed:{}},
-    23:{leg:"tokyo",city:"Tokyo",ico:"🗼",nights:"Night 4 of 6",seed:{}},
-    24:{leg:"tokyo",city:"Tokyo",ico:"🎄",nights:"Night 5 of 6 · Christmas Eve",seed:{}},
-    25:{leg:"tokyo",city:"Tokyo",ico:"🎄",nights:"Night 6 of 6 · Christmas Day",seed:{}},
-    26:{leg:"kyoto",city:"Tokyo → Kyoto",ico:"🚄",nights:"Kyoto · night 1 of 5",move:{mode:"train",brand:"Shinkansen",from:"tokyo",to:"kyoto"},seed:{transport:"Morning in Tokyo, then 2:30 PM Shinkansen Tokyo → Kyoto, arriving 4:44 PM."}},
-    27:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 2 of 5",seed:{}},
-    28:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 3 of 5",seed:{}},
-    29:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 4 of 5",seed:{}},
-    30:{leg:"kyoto",city:"Kyoto",ico:"⛩️",nights:"Night 5 of 5 · New Year's Eve eve",seed:{}},
-    31:{leg:"kyoto",city:"Kyoto → Home",ico:"✈️",nights:"Half day · fly home",move:{mode:"plane",brand:"United",from:"kyoto",to:"transit"},seed:{transport:"Morning free in Kyoto, transfer to Osaka (KIX). United (op. ANA) · KIX → SFO departs 6:35 PM, lands SFO 11:50 AM same day.",stay:"Check out; overnight flight home."}},
-  },
-};
+let REGIONS={};
+let PLAN={route:[],days:{}};
+
 
 const LANDREAL=[[[119.13,-8.71],[116.74,-9.03],[117.08,-8.46],[117.63,-8.45],[117.9,-8.1],[118.88,-8.28],[119.13,-8.71]],[[113.46,-8.35],[106.45,-7.35],[106.28,-6.92],[105.37,-6.85],[106.05,-5.9],[107.27,-5.95],[108.49,-6.42],[108.62,-6.78],[110.54,-6.88],[110.76,-6.47],[112.61,-6.95],[112.98,-7.59],[114.48,-7.78],[115.71,-8.37],[114.56,-8.75],[113.46,-8.35]],[[98.6,1.82],[95.38,4.97],[95.29,5.48],[97.48,5.25],[100.64,2.1],[101.66,2.08],[103.84,0.1],[103.44,-0.71],[104.37,-1.08],[104.89,-2.34],[105.62,-2.43],[106.11,-3.06],[105.82,-5.85],[104.71,-5.87],[102.58,-4.22],[99.26,0.18],[98.6,1.82]],[[111.7,-2.99],[110.22,-2.93],[110.07,-1.59],[109.09,-0.46],[109.07,1.34],[109.66,2.01],[110.4,1.66],[111.17,1.85],[111.37,2.7],[113.0,3.1],[116.73,6.92],[117.13,6.93],[117.69,5.99],[119.18,5.41],[119.11,5.02],[118.44,4.97],[118.62,4.48],[117.88,4.14],[117.31,3.23],[118.05,2.29],[117.88,1.83],[119.0,0.9],[117.81,0.78],[117.48,0.1],[117.52,-0.8],[116.56,-1.49],[116.15,-4.01],[116.0,-3.66],[114.86,-4.11],[114.47,-3.5],[113.26,-3.12],[112.07,-3.48],[111.7,-2.99]],[[109.12,19.82],[110.79,20.08],[111.01,19.7],[110.34,18.68],[109.48,18.2],[108.66,18.51],[108.63,19.37],[109.12,19.82]],[[-154.81,19.51],[-155.69,18.92],[-155.94,19.06],[-155.86,20.27],[-154.81,19.51]],[[-123.92,49.06],[-123.51,48.51],[-124.01,48.37],[-125.66,48.83],[-127.03,49.81],[-128.06,49.99],[-128.44,50.54],[-128.36,50.77],[-125.76,50.3],[-124.92,49.48],[-123.92,49.06]],[[-118.52,34.03],[-120.62,34.61],[-120.74,35.16],[-121.71,36.16],[-122.51,37.78],[-123.73,38.95],[-123.87,39.77],[-124.4,40.31],[-124.21,42.0],[-124.53,42.77],[-123.9,45.52],[-124.08,46.86],[-124.69,48.18],[-124.57,48.38],[-123.12,48.04],[-122.59,47.1],[-122.34,47.36],[-122.84,49.0],[-125.62,50.42],[-127.44,50.83],[-127.99,51.72],[-127.85,52.33],[-129.13,52.76],[-129.31,53.56],[-130.51,54.29],[-130.54,54.8],[-131.97,55.5],[-132.25,56.37],[-133.54,57.18],[-134.08,58.12],[-136.63,58.21],[-139.87,59.54],[-142.57,60.08],[-143.96,60.0],[-147.11,60.88],[-148.22,60.67],[-148.02,59.98],[-151.72,59.16],[-151.86,59.75],[-151.41,60.73],[-150.35,61.03],[-150.62,61.28],[-154.02,59.35],[-153.29,58.86],[-154.23,58.15],[-156.31,57.42],[-156.56,56.98],[-158.12,56.46],[-158.43,55.99],[-164.79,54.4],[-164.94,54.57],[-161.8,55.9],[-160.56,56.01],[-157.72,57.57],[-157.04,58.92],[-158.52,58.79],[-159.06,58.42],[-159.71,58.93],[-159.98,58.57],[-160.36,59.07],[-161.97,58.67],[-161.87,59.63],[-162.52,59.99],[-163.82,59.8],[-165.35,60.51],[-165.35,61.07],[-166.12,61.5],[-165.73,62.08],[-164.56,63.15],[-163.07,63.06],[-162.26,63.54],[-160.77,63.77],[-160.96,64.22],[-161.52,64.4],[-160.78,64.79],[-162.76,64.34],[-164.96,64.45],[-166.43,64.69],[-168.11,65.67],[-164.47,66.58],[-163.65,66.58],[-163.79,66.08],[-161.68,66.12],[-165.39,68.04],[-166.76,68.36],[-166.2,68.88],[-164.43,68.92],[-163.17,69.37],[-162.63,70.0],[-142.82,70.0],[-136.5,68.9],[-134.41,69.63],[-132.93,69.51],[-131.07,70.0],[-129.11,69.78],[-126.74,70.0],[-125.76,69.48],[-124.4,70.0],[-124.29,69.4],[-122.68,69.86],[-121.47,69.8],[-116.0,68.86],[-116.0,30.38],[-117.3,33.05],[-118.52,34.03]],[[-131.18,52.18],[-131.58,52.18],[-133.05,53.41],[-133.18,54.17],[-131.75,54.12],[-132.05,52.98],[-131.18,52.18]],[[-153.23,57.97],[-152.14,57.59],[-153.01,57.12],[-154.01,56.73],[-154.52,56.99],[-154.67,57.46],[-153.23,57.97]],[[-165.58,59.91],[-167.46,60.21],[-165.67,60.29],[-165.58,59.91]],[[-171.73,63.78],[-168.69,63.3],[-169.53,62.98],[-171.79,63.41],[-171.73,63.78]],[[-178.36,65.39],[-178.9,65.74],[-178.69,66.11],[-179.88,65.87],[-179.43,65.4],[-180.0,64.98],[-180.0,68.96],[-174.93,67.21],[-175.01,66.58],[-174.34,66.34],[-174.57,67.06],[-171.86,66.91],[-169.9,65.98],[-170.89,65.54],[-172.53,65.44],[-172.56,64.46],[-172.96,64.25],[-175.98,64.92],[-176.21,65.36],[-178.36,65.39]],[[-117.34,69.96],[-116.0,70.0],[-116.0,69.18],[-116.11,69.17],[-117.34,69.96]],[[148.85,-20.39],[148.72,-20.63],[149.68,-22.34],[150.08,-22.12],[150.48,-22.56],[150.73,-22.4],[150.9,-23.46],[152.86,-25.27],[153.14,-26.07],[153.51,-29.0],[152.72,-32.0],[132.71,-32.0],[131.33,-31.5],[128.07,-32.0],[115.76,-32.0],[115.04,-29.46],[113.34,-26.12],[113.78,-26.55],[113.44,-25.62],[114.23,-26.3],[113.39,-24.38],[114.15,-21.76],[114.23,-22.52],[114.65,-21.83],[116.71,-20.7],[117.44,-20.75],[119.25,-19.95],[120.86,-19.68],[122.24,-18.2],[122.31,-17.25],[123.01,-16.41],[123.43,-17.27],[123.86,-17.07],[123.5,-16.6],[123.82,-16.11],[124.26,-16.33],[124.38,-15.57],[125.69,-14.23],[126.13,-14.35],[126.14,-14.1],[127.07,-13.82],[128.36,-14.87],[129.62,-14.97],[129.41,-14.42],[130.34,-13.36],[130.18,-13.11],[130.62,-12.54],[131.22,-12.18],[132.58,-12.11],[132.56,-11.6],[131.82,-11.27],[132.36,-11.13],[135.3,-12.25],[136.49,-11.86],[136.95,-12.35],[136.31,-13.29],[135.96,-13.32],[136.08,-13.72],[135.5,-15.0],[140.22,-17.71],[140.88,-17.37],[141.27,-16.39],[141.7,-15.04],[141.69,-12.41],[142.52,-10.67],[143.52,-12.83],[143.92,-14.55],[144.56,-14.17],[145.37,-14.98],[145.49,-16.29],[146.39,-18.96],[148.85,-20.39]],[[120.72,-10.24],[118.97,-9.56],[119.9,-9.36],[120.78,-9.97],[120.72,-10.24]],[[124.44,-10.14],[123.46,-10.24],[123.98,-9.29],[125.09,-8.66],[127.34,-8.4],[125.09,-9.39],[124.44,-10.14]],[[120.72,-8.24],[122.01,-8.46],[122.9,-8.09],[122.76,-8.65],[119.92,-8.81],[119.92,-8.44],[120.72,-8.24]],[[134.21,-6.9],[134.29,-5.78],[134.5,-5.45],[134.72,-6.21],[134.21,-6.9]],[[127.0,-3.13],[127.25,-3.46],[126.87,-3.79],[126.18,-3.61],[125.99,-3.18],[127.0,-3.13]],[[128.14,-2.84],[130.47,-3.09],[130.83,-3.86],[129.99,-3.45],[127.9,-3.39],[128.14,-2.84]],[[122.45,-3.19],[122.27,-3.53],[123.17,-4.68],[123.16,-5.34],[122.63,-5.63],[122.24,-5.28],[122.72,-4.46],[121.74,-4.85],[121.49,-4.57],[121.62,-4.19],[120.9,-3.6],[120.97,-2.63],[120.31,-2.93],[120.43,-5.53],[119.8,-5.67],[119.37,-5.38],[119.65,-4.46],[119.5,-3.49],[119.08,-3.49],[118.77,-2.8],[120.04,0.57],[120.89,1.31],[124.08,0.92],[125.07,1.64],[125.24,1.42],[124.44,0.43],[120.18,0.24],[120.04,-0.52],[120.94,-1.41],[121.48,-0.96],[123.34,-0.62],[123.26,-1.08],[122.82,-0.93],[122.39,-1.52],[121.51,-1.9],[122.45,-3.19]],[[128.64,0.26],[128.12,0.36],[127.97,-0.25],[128.38,-0.78],[128.1,-0.9],[127.4,1.01],[127.93,2.17],[128.0,1.63],[128.59,1.54],[128.64,0.26]],[[122.09,6.9],[121.92,7.19],[122.31,8.03],[123.49,8.69],[123.84,8.24],[124.6,8.51],[124.76,8.96],[125.47,8.99],[125.41,9.76],[126.22,9.29],[126.54,7.19],[126.2,6.27],[125.83,7.29],[125.36,6.79],[125.68,6.05],[125.4,5.58],[124.22,6.16],[123.94,6.89],[124.24,7.36],[123.61,7.83],[122.09,6.9]],[[119.69,10.55],[118.5,9.32],[117.17,8.37],[119.51,11.37],[119.69,10.55]],[[123.0,9.02],[122.38,9.71],[122.95,10.88],[123.5,10.94],[123.34,10.27],[124.08,11.23],[123.98,10.28],[123.0,9.02]],[[122.0,10.44],[121.88,11.89],[123.12,11.58],[122.64,10.74],[122.0,10.44]],[[125.78,11.05],[125.01,11.31],[125.28,10.36],[124.8,10.13],[124.76,10.84],[124.46,10.89],[124.3,11.5],[124.89,11.42],[124.88,11.79],[124.27,12.56],[125.23,12.54],[125.78,11.05]],[[121.18,13.43],[121.53,13.07],[121.26,12.21],[120.32,13.47],[121.18,13.43]],[[123.86,13.24],[124.18,13.0],[124.08,12.54],[122.93,13.55],[122.67,13.19],[122.03,13.78],[120.63,13.86],[120.99,14.53],[120.69,14.76],[120.56,14.4],[120.07,14.97],[119.88,16.36],[120.29,16.03],[120.72,18.51],[121.94,18.22],[122.25,18.48],[122.52,17.09],[122.25,16.26],[121.66,15.93],[121.73,14.33],[122.7,14.34],[123.95,13.78],[123.86,13.24]],[[121.95,25.0],[121.18,22.79],[120.75,21.97],[120.11,23.56],[121.5,25.3],[121.95,25.0]],[[133.79,33.52],[133.28,33.29],[133.01,32.7],[132.36,32.99],[132.37,33.46],[132.92,34.06],[133.49,33.94],[133.9,34.36],[134.64,34.15],[134.77,33.81],[134.2,33.2],[133.79,33.52]],[[130.69,31.03],[130.2,31.42],[130.45,32.32],[129.81,32.61],[129.41,33.3],[130.35,33.6],[132.62,35.43],[134.61,35.73],[135.68,35.53],[136.72,37.3],[137.39,36.83],[139.43,38.22],[140.05,39.44],[139.88,40.56],[140.31,41.2],[141.37,41.38],[141.91,39.99],[141.88,39.18],[140.96,38.17],[140.98,37.14],[140.6,36.34],[140.77,35.84],[140.25,35.14],[138.98,34.67],[137.22,34.61],[135.79,33.46],[135.12,33.85],[135.08,34.6],[130.99,33.89],[132.0,33.15],[131.33,31.45],[130.69,31.03]],[[166.74,-22.4],[164.83,-21.15],[164.03,-20.11],[165.02,-20.46],[167.12,-22.16],[166.74,-22.4]],[[177.29,-17.72],[178.37,-17.34],[178.72,-17.63],[178.55,-18.15],[177.38,-18.16],[177.29,-17.72]],[[180.0,-16.56],[178.73,-17.01],[178.6,-16.64],[180.0,-16.07],[180.0,-16.56]],[[167.27,-15.74],[166.65,-15.39],[166.63,-14.63],[167.11,-14.93],[167.27,-15.74]],[[160.85,-9.87],[159.85,-9.79],[159.7,-9.24],[160.36,-9.4],[160.85,-9.87]],[[161.53,-9.78],[160.58,-8.32],[160.92,-8.32],[161.68,-9.6],[161.53,-9.78]],[[154.73,-5.9],[154.65,-5.04],[156.02,-6.54],[155.88,-6.82],[155.6,-6.92],[154.73,-5.9]],[[147.65,-6.08],[147.89,-6.61],[146.97,-6.72],[147.19,-7.39],[148.08,-8.04],[148.73,-9.1],[149.31,-9.07],[149.27,-9.51],[150.8,-10.29],[150.69,-10.58],[147.91,-10.13],[146.57,-8.94],[146.05,-8.07],[144.74,-7.63],[143.29,-8.25],[143.41,-8.98],[142.63,-9.33],[141.03,-9.12],[140.14,-8.3],[139.13,-8.1],[138.88,-8.38],[137.61,-8.41],[138.04,-7.6],[138.67,-7.32],[137.93,-5.39],[135.16,-4.46],[133.66,-3.54],[132.98,-4.11],[132.75,-3.31],[131.99,-2.82],[133.78,-2.48],[133.7,-2.21],[132.23,-2.21],[131.84,-1.62],[130.94,-1.43],[130.52,-0.94],[132.38,-0.37],[133.99,-0.78],[134.42,-2.77],[135.46,-3.37],[136.29,-2.31],[137.44,-1.7],[138.33,-1.7],[144.58,-3.86],[145.83,-4.88],[145.98,-5.47],[147.65,-6.08]],[[150.81,-5.46],[151.65,-4.76],[151.54,-4.17],[152.34,-4.31],[151.98,-5.48],[150.24,-6.32],[148.32,-5.75],[148.4,-5.44],[149.85,-5.51],[150.14,-5.0],[150.24,-5.53],[150.81,-5.46]],[[152.83,-4.77],[152.41,-3.79],[150.66,-2.74],[150.94,-2.5],[152.24,-3.24],[153.02,-3.98],[153.14,-4.5],[152.83,-4.77]],[[169.58,68.69],[170.82,69.01],[170.01,69.65],[170.36,70.0],[175.72,69.88],[180.0,68.96],[180.0,64.98],[178.71,64.53],[177.41,64.61],[178.31,64.08],[179.49,62.57],[179.23,62.3],[177.36,62.52],[173.68,61.65],[170.7,60.34],[170.33,59.88],[168.9,60.57],[166.3,59.79],[165.84,60.16],[164.88,59.73],[163.54,59.87],[163.22,59.21],[162.02,58.24],[162.05,57.84],[163.19,57.62],[163.06,56.16],[162.13,56.12],[161.7,55.29],[162.12,54.86],[160.37,54.34],[160.02,53.2],[158.53,52.96],[158.23,51.94],[156.79,51.01],[155.43,55.38],[155.91,56.77],[156.76,57.36],[156.81,57.83],[158.36,58.06],[161.87,60.34],[163.67,61.14],[164.47,62.55],[163.26,62.47],[162.66,61.64],[160.12,60.54],[159.3,61.77],[156.72,61.43],[154.22,59.76],[155.04,59.15],[151.27,58.78],[151.34,59.5],[149.78,59.66],[148.54,59.16],[145.49,59.34],[142.2,59.04],[135.13,54.73],[136.7,54.6],[137.19,53.98],[138.16,53.76],[138.8,54.25],[139.9,54.19],[141.35,53.09],[141.38,52.24],[140.6,51.24],[140.06,48.45],[138.22,46.31],[134.87,43.4],[133.54,42.81],[132.91,42.8],[132.28,43.28],[129.97,41.94],[129.67,41.6],[129.71,40.88],[127.53,39.76],[127.39,39.21],[128.35,38.61],[129.46,36.78],[129.47,35.63],[129.09,35.08],[126.49,34.39],[126.56,35.68],[126.12,36.73],[126.86,36.89],[126.17,37.75],[125.69,37.94],[125.28,37.67],[124.71,38.11],[125.22,38.67],[125.32,39.55],[124.27,39.93],[121.05,38.9],[121.59,39.36],[121.38,39.75],[122.17,40.42],[121.64,40.95],[119.64,39.9],[119.02,39.25],[118.04,39.2],[117.53,38.74],[118.06,38.06],[118.88,37.9],[118.91,37.45],[119.7,37.16],[120.82,37.87],[122.36,37.45],[122.52,36.93],[121.1,36.65],[119.15,34.91],[120.23,34.36],[121.91,31.69],[121.89,30.95],[121.26,30.68],[121.5,30.14],[122.09,29.83],[121.68,28.23],[121.13,28.14],[118.66,24.55],[115.89,22.78],[114.76,22.67],[114.15,22.22],[113.81,22.55],[113.24,22.05],[110.79,21.4],[110.44,20.34],[109.89,20.28],[109.63,21.01],[109.86,21.4],[108.52,21.72],[106.72,20.7],[105.88,19.75],[105.66,19.06],[107.36,16.7],[108.88,15.28],[109.34,13.43],[109.2,11.67],[105.16,8.6],[104.8,9.24],[105.08,9.92],[104.33,10.49],[103.5,10.63],[102.59,12.19],[101.69,12.65],[100.83,12.63],[100.98,13.41],[100.1,13.41],[100.02,12.31],[99.15,9.96],[99.22,9.24],[99.87,9.21],[100.46,7.43],[102.96,5.52],[103.38,4.86],[103.5,2.79],[104.23,1.29],[103.52,1.23],[101.39,2.76],[100.2,5.31],[100.09,6.46],[98.5,8.38],[98.34,7.79],[98.15,8.35],[98.76,11.44],[98.43,12.03],[98.51,13.12],[98.1,13.64],[97.16,16.93],[95.37,15.71],[94.19,16.04],[94.53,17.28],[94.0,18.69],[94.0,70.0],[159.75,70.0],[159.71,69.72],[160.94,69.44],[167.84,69.58],[169.58,68.69]],[[143.14,44.51],[144.61,43.96],[145.32,44.38],[145.54,43.26],[144.06,42.99],[143.18,42.0],[141.61,42.68],[141.07,41.58],[139.96,41.57],[139.82,42.56],[140.31,43.33],[141.38,43.39],[141.97,45.55],[143.14,44.51]],[[141.68,53.3],[142.61,53.76],[142.21,54.23],[142.65,54.37],[143.26,52.74],[143.24,51.76],[144.65,48.98],[143.17,49.31],[142.56,47.86],[143.53,46.84],[143.51,46.14],[142.75,46.74],[142.09,45.97],[141.9,48.86],[142.18,50.95],[141.59,51.94],[141.68,53.3]]];
 
-const LEGS=[
-  {kind:"cap",short:"✈️ DEC 11<br>DEPART SFO",label:"Dec 11 — Depart SFO",note:"United · SFO → HKG · 11:15 PM, nonstop 15h 30m"},
-  {leg:"hongkong",city:"Hong Kong",d1:13,d2:13,nights:1,hotel:"Hotel TBD",via:"✈️ United — lands 6:45 AM Dec 13"},
-  {leg:"thailand",city:"Koh Samui",d1:14,d2:19,nights:6,hotel:"Banyan Tree — Ocean View Pool Villa",via:"✈️ Bangkok Airways — 5:05 PM → 7:35 PM"},
-  {leg:"tokyo",city:"Tokyo",d1:20,d2:25,nights:6,hotel:"Hotel TBD",via:"✈️ Bangkok Airways PG122 + Thai TG660 — lands 10:05 PM"},
-  {leg:"kyoto",city:"Kyoto",d1:26,d2:30,nights:5,hotel:"Hotel TBD",via:"🚄 Shinkansen — 2:30 PM → 4:44 PM"},
-  {kind:"cap",short:"✈️ DEC 31<br>FLY HOME",label:"Dec 31 — Fly home",note:"United · KIX → SFO · 6:35 PM, lands 11:50 AM"},
-];
+let LEGS=[];
 
 const CATS={Flights:"#3730a3",Lodging:"#0f766e",Activities:"#c2410c",Food:"#b45309",Transport:"#6b7280",Other:"#9d174d"};
-const WEEKDAY_DEC1=2, DAYS_IN_DEC=31;
+let WEEKDAY_DEC1=2, DAYS_IN_DEC=31;
 const WD_SHORT=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const WD_LONG=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const wdOf=d=>(WEEKDAY_DEC1+(d-1))%7;
@@ -502,13 +459,12 @@ const fmt$=n=>"$"+Math.round(n||0).toLocaleString("en-US");
 const modeGlyph=m=> m==="train"?"🚄":(m==="boat"?"⛴️":"✈️");
 const stripe2=info=>REGIONS[info.leg===info.move.to?info.move.from:info.move.to].color;
 const noteKey=(d,k)=>`planA3-${d}-${k}`;
-const EXP_KEY="planA3-expenses";
 
 const flash=document.getElementById("saveflash");let ft;
 function showSaved(){flash.classList.add("show");clearTimeout(ft);ft=setTimeout(()=>flash.classList.remove("show"),900);}
 
 /* ---- Map ---- */
-const GEO={"SFO":[37.62,-122.38],"Singapore":[1.35,103.82],"Hong Kong":[22.32,114.17],"Koh Samui":[9.51,100.06],"Chiang Mai":[18.79,98.99],"Tokyo":[35.68,139.77],"Kyoto":[35.01,135.77]};
+let GEO={};
 const LBL={"SFO":[-10,4,"end"],"Singapore":[10,4,"start"],"Hong Kong":[11,-7,"start"],"Koh Samui":[11,11,"start"],"Chiang Mai":[-10,-7,"end"],"Tokyo":[11,-7,"start"],"Kyoto":[-10,15,"end"]};
 const lonP=lon=>lon<-40?lon+360:lon;
 function renderMap(){
@@ -587,7 +543,7 @@ function renderRibbon(){
 
 /* ---- Legend ---- */
 function renderLegend(){
-  const order=["hongkong","thailand","tokyo","kyoto"];
+  const order=LEGS.filter(L=>!L.kind).map(L=>L.leg);
   document.getElementById("legend").innerHTML=
     order.map(k=>`<span class="li"><span class="dot" style="background:${REGIONS[k].color}"></span>${REGIONS[k].label.split(",")[0]}</span>`).join("")+
     `<span class="li"><span class="dot" style="background:repeating-linear-gradient(-45deg,#9aa1ab 0 3px,#d6d9dd 3px 6px)"></span>Travel day</span>`;
@@ -595,9 +551,9 @@ function renderLegend(){
 
 /* ---- Calendar ---- */
 function hotelFor(d,info){
-  if(info.hotel) return {name:info.hotel,tbd:false};
-  if((info.leg==="hongkong"||info.leg==="tokyo"||info.leg==="kyoto") && !/Home/.test(info.city)) return {name:"Hotel TBD",tbd:true};
-  return null;
+  if(info.leg==="transit"||/Home/.test(info.city)) return null;
+  const hg=HOTELGEO[info.hotel_key||info.leg];
+  return hg?{name:hg.name,tbd:false}:{name:"Hotel TBD",tbd:true};
 }
 function renderCalendar(){
   const g=document.getElementById("grid"); let h="";
@@ -639,10 +595,8 @@ function renderAgenda(){
 }
 
 /* ---- Leg hub: full map + day sub-pages ---- */
-const CITY={transit:{c:[37.6213,-122.379],z:11},hongkong:{c:[22.3193,114.1694],z:12},thailand:{c:[9.512,100.043],z:11},tokyo:{c:[35.6812,139.7671],z:12},kyoto:{c:[35.0116,135.7681],z:13}};
-const HOTELGEO={ // hotel pin coords — adjust here if off
-  thailand:{name:"Banyan Tree Koh Samui",lat:9.47285,lng:100.06933},
-};
+let CITY={};
+let HOTELGEO={};
 /* ---- Shared trip items (Supabase) ---- */
 const SUPA_URL="https://kfjpagrtfcwqhofjlenz.supabase.co";
 const SUPA_KEY="sb_publishable_nUVh1Ds6iEiaEV5VOKx_Vw_rhEaoBzI";
@@ -660,41 +614,47 @@ function refreshOpenHubData(){
   if(hubFilter){document.getElementById("hubFilter").innerHTML=filterHTML(hubFilter);}
   else if(hubSel!=null){const d=hubSel;hubSel=null;if(MOBILE())showDay(d);else accordion(d);}
 }
-// Travel-day itineraries (transfer times are ~estimates)
-const TRAVEL={
-  11:[
-    {ico:"🏠",main:"Home → SFO",sub:"~45 min"},
-    {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
-    {ico:"✈️",main:"United · SFO → Hong Kong (HKG)",sub:"11:15 PM · nonstop 15h 30m · lands 6:45 AM Dec 13 (+2, date line)"},
-    {ico:"🚕",main:"HKG → Hong Kong hotel",sub:"~40 min"},
-  ],
-  14:[
-    {ico:"🏨",main:"Hong Kong hotel → HKG",sub:"~40 min"},
-    {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
-    {ico:"✈️",main:"Bangkok Airways · HKG → Koh Samui (USM)",sub:"5:05 PM → 7:35 PM · nonstop 3h 30m"},
-    {ico:"🚕",main:"USM → Banyan Tree",sub:"~30 min resort transfer"},
-  ],
-  20:[
-    {ico:"🏨",main:"Banyan Tree → Koh Samui (USM)",sub:"~30 min"},
-    {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
-    {ico:"✈️",main:"PG122 · Bangkok Airways · USM → Bangkok (BKK)",sub:"9:20 AM → 10:35 AM · 1h 15m"},
-    {ico:"🕐",main:"Layover in Bangkok",sub:"3h 50m"},
-    {ico:"✈️",main:"TG660 · Thai Airways · BKK → Tokyo",sub:"2:25 PM → 10:05 PM · ~6h 40m"},
-    {ico:"🚕",main:"Airport → Tokyo hotel",sub:"~45 min"},
-  ],
-  26:[
-    {ico:"🏨",main:"Tokyo hotel → Tokyo Station",sub:"~20 min"},
-    {ico:"🕐",main:"Station buffer",sub:"30 min before departure"},
-    {ico:"🚄",main:"Shinkansen · Tokyo → Kyoto",sub:"2:30 PM → 4:44 PM · 2h 14m"},
-    {ico:"🚕",main:"Kyoto Station → hotel",sub:"~15 min"},
-  ],
-  31:[
-    {ico:"🏨",main:"Kyoto hotel → Osaka Kansai (KIX)",sub:"~90 min"},
-    {ico:"🕐",main:"Airport buffer",sub:"90 min before departure"},
-    {ico:"✈️",main:"United (op. ANA) · KIX → SFO",sub:"6:35 PM → 11:50 AM same day · ~10h 15m"},
-    {ico:"🏠",main:"SFO → home",sub:"~45 min"},
-  ],
-};
+
+/* ---- Trip loader: the engine reads the whole trip from the DB ---- */
+let TRIP=null;
+async function loadTrip(){
+  if(!sb)return false;
+  const {data:trips}=await sb.from("trips").select("*").order("created_at").limit(1);
+  if(!trips||!trips.length)return false;
+  const trip=trips[0];TRIP=trip;
+  const [lr,dr,hr,gr]=await Promise.all([
+    sb.from("legs").select("*").eq("trip_id",trip.id).order("sort"),
+    sb.from("days").select("*").eq("trip_id",trip.id).order("date"),
+    sb.from("hotels").select("*").eq("trip_id",trip.id),
+    sb.from("travel_segments").select("*").eq("trip_id",trip.id).order("date").order("sort"),
+  ]);
+  const legs=lr.data||[],days=dr.data||[],hotels=hr.data||[],segs=gr.data||[];
+  REGIONS={};CITY={};
+  legs.forEach(l=>{REGIONS[l.key]={label:l.label,color:l.color};CITY[l.key]={c:[l.center_lat,l.center_lng],z:l.zoom};});
+  HOTELGEO={};hotels.forEach(h=>{HOTELGEO[h.leg_key]={name:h.name,lat:h.lat,lng:h.lng};});
+  const start=new Date(trip.start_date+"T00:00:00Z");
+  WEEKDAY_DEC1=new Date(Date.UTC(start.getUTCFullYear(),start.getUTCMonth(),1)).getUTCDay();
+  DAYS_IN_DEC=new Date(Date.UTC(start.getUTCFullYear(),start.getUTCMonth()+1,0)).getUTCDate();
+  PLAN={route:[],days:{}};
+  days.forEach(d=>{const dn=+d.date.slice(8,10);PLAN.days[dn]={leg:d.leg_key,city:d.city,ico:d.ico,nights:d.nights,move:d.move||undefined,hotel_key:d.hotel_key||undefined};});
+  TRAVEL={};segs.forEach(g=>{const dn=+g.date.slice(8,10);(TRAVEL[dn]=TRAVEL[dn]||[]).push({ico:g.ico,main:g.main,sub:g.sub});});
+  const stay=legs.filter(l=>!l.is_transit);
+  GEO={};if(trip.origin_name)GEO[trip.origin_name]=[trip.origin_lat,trip.origin_lng];
+  stay.forEach(l=>{GEO[l.label.split(",")[0]]=[l.center_lat,l.center_lng];});
+  PLAN.route=[...(trip.origin_name?[[trip.origin_name,"transit"]]:[]),
+    ...stay.map(l=>[l.label.split(",")[0],l.key]),
+    ...(trip.origin_name?[[trip.origin_name,"transit"]]:[])];
+  LEGS=[...(trip.cap_start?[{kind:"cap",short:trip.cap_start.short,label:trip.cap_start.label,note:trip.cap_start.note}]:[]),
+    ...stay.map(l=>({leg:l.key,city:l.label.split(",")[0],d1:l.d1,d2:l.d2,nights:l.nights,hotel:HOTELGEO[l.key]?HOTELGEO[l.key].name:"Hotel TBD",via:l.via||""})),
+    ...(trip.cap_end?[{kind:"cap",short:trip.cap_end.short,label:trip.cap_end.label,note:trip.cap_end.note}]:[])];
+  LEGSEQ=[];Object.keys(PLAN.days).map(Number).sort((a,b)=>a-b).forEach(d=>{const lg=PLAN.days[d].leg;if(!LEGSEQ.includes(lg))LEGSEQ.push(lg);});
+  return true;
+}
+function renderAll(){
+  document.getElementById("map").innerHTML=renderMap();
+  renderRibbon();renderLegend();renderCalendar();renderAgenda();
+}
+let TRAVEL={};
 
 // Real rail routes (station waypoints), keyed "from>to"
 const RAIL={
@@ -793,7 +753,7 @@ function accordion(d){
 }
 
 /* mobile: swipe left/right on the day sub-page to move between days */
-const LEGSEQ=(()=>{const seq=[];for(let d=1;d<=DAYS_IN_DEC;d++){const i=PLAN.days[d];if(i&&!seq.includes(i.leg))seq.push(i.leg);}return seq;})();
+let LEGSEQ=[];
 function navDay(dir){
   if(hubSel==null)return;
   const days=legDays(hubLeg),i=days.indexOf(hubSel);
@@ -955,35 +915,51 @@ scrim.addEventListener("click",e=>{if(e.target===scrim)closeHub();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeHub();scrimCost.classList.remove("open");}});
 
 /* ---- Cost tracker ---- */
-let EXP;
-try{EXP=JSON.parse(localStorage.getItem(EXP_KEY));}catch(e){EXP=null;}
-if(!Array.isArray(EXP)) EXP=PLAN.expSeed.map(x=>Object.assign({},x));
-function saveExp(){localStorage.setItem(EXP_KEY,JSON.stringify(EXP));showSaved();updateStatTotals();}
+let EXP=[];
+async function fetchExpenses(){
+  if(!sb)return;
+  const {data,error}=await sb.from("expenses").select("*").order("created_at");
+  if(!error&&Array.isArray(data))EXP=data;
+}
+const EXP_TIMERS={};
+function queueExpSave(id,k,v){
+  clearTimeout(EXP_TIMERS[id+k]);
+  EXP_TIMERS[id+k]=setTimeout(async()=>{if(sb){await sb.from("expenses").update({[k]:v}).eq("id",id);showSaved();}},600);
+}
 const scrimCost=document.getElementById("scrimCost");
 function openCost(){ renderCostModal(); scrimCost.classList.add("open"); }
 document.getElementById("cClose").onclick=()=>scrimCost.classList.remove("open");
 scrimCost.addEventListener("click",e=>{if(e.target===scrimCost)scrimCost.classList.remove("open");});
-document.getElementById("ctAdd").onclick=()=>{EXP.push({desc:"",cat:"Other",cash:0,points:0,prog:""});saveExp();renderCostModal();};
+document.getElementById("ctAdd").onclick=async()=>{
+  if(!sb||!TRIP)return;
+  const {data,error}=await sb.from("expenses").insert({trip_id:TRIP.id}).select().single();
+  if(!error&&data){EXP.push(data);renderCostModal();}
+};
 function renderCostModal(){ renderCostTable(); renderCostSummary(); }
 function renderCostTable(){
   const t=document.getElementById("ctTable");
   let h=`<thead><tr><th>Description</th><th class="catcell">Category</th><th class="numcell num">Cash&nbsp;$</th><th class="numcell num">Points</th><th>Program</th><th></th></tr></thead><tbody>`;
   EXP.forEach((e,i)=>{
     h+=`<tr>
-      <td data-label="Item"><input value="${esc(e.desc)}" data-i="${i}" data-k="desc" placeholder="What is it?"></td>
-      <td class="catcell" data-label="Category"><select data-i="${i}" data-k="cat">${Object.keys(CATS).map(c=>`<option ${c===e.cat?"selected":""}>${c}</option>`).join("")}</select></td>
-      <td class="numcell" data-label="Cash $"><input class="num" type="number" min="0" value="${e.cash||""}" data-i="${i}" data-k="cash" placeholder="0"></td>
-      <td class="numcell" data-label="Points"><input class="num" type="number" min="0" value="${e.points||""}" data-i="${i}" data-k="points" placeholder="0"></td>
-      <td data-label="Program"><input value="${esc(e.prog)}" data-i="${i}" data-k="prog" placeholder="e.g. Chase UR"></td>
-      <td class="delcell"><button class="ct-del" data-del="${i}">×</button></td></tr>`;
+      <td data-label="Item"><input value="${esc(e.desc)}" data-id="${e.id}" data-k="desc" placeholder="What is it?"></td>
+      <td class="catcell" data-label="Category"><select data-id="${e.id}" data-k="cat">${Object.keys(CATS).map(c=>`<option ${c===e.cat?"selected":""}>${c}</option>`).join("")}</select></td>
+      <td class="numcell" data-label="Cash $"><input class="num" type="number" min="0" value="${e.cash||""}" data-id="${e.id}" data-k="cash" placeholder="0"></td>
+      <td class="numcell" data-label="Points"><input class="num" type="number" min="0" value="${e.points||""}" data-id="${e.id}" data-k="points" placeholder="0"></td>
+      <td data-label="Program"><input value="${esc(e.prog)}" data-id="${e.id}" data-k="prog" placeholder="e.g. Chase UR"></td>
+      <td class="delcell"><button class="ct-del" data-del="${e.id}">×</button></td></tr>`;
   });
   t.innerHTML=h+`</tbody>`;
   t.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",()=>{
-    const i=+el.dataset.i,k=el.dataset.k;
-    EXP[i][k]=(k==="cash"||k==="points")?(parseFloat(el.value)||0):el.value;
-    saveExp();renderCostSummary();
+    const id=el.dataset.id,k=el.dataset.k,row=EXP.find(x=>x.id===id);
+    if(!row)return;
+    row[k]=(k==="cash"||k==="points")?(parseFloat(el.value)||0):el.value;
+    queueExpSave(id,k,row[k]);updateStatTotals();renderCostSummary();
   }));
-  t.querySelectorAll(".ct-del").forEach(b=>b.onclick=()=>{EXP.splice(+b.dataset.del,1);saveExp();renderCostModal();});
+  t.querySelectorAll(".ct-del").forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.del;
+    EXP=EXP.filter(x=>x.id!==id);renderCostModal();updateStatTotals();
+    if(sb){await sb.from("expenses").delete().eq("id",id);showSaved();}
+  });
 }
 function renderCostSummary(){
   const [totCash,totPts]=totals();
@@ -1042,8 +1018,13 @@ document.addEventListener("click",e=>{if(!e.target.closest(".fab-wrap"))fabMenu.
 let RT=false;
 function subscribeItems(){
   if(!sb||RT)return;RT=true;
-  sb.channel("items-changes")
+  sb.channel("trip-changes")
     .on("postgres_changes",{event:"*",schema:"public",table:"items"},async()=>{await fetchItems();refreshOpenHubData();})
+    .on("postgres_changes",{event:"*",schema:"public",table:"hotels"},async()=>{await loadTrip();renderAll();refreshOpenHubData();})
+    .on("postgres_changes",{event:"*",schema:"public",table:"expenses"},async()=>{
+      await fetchExpenses();updateStatTotals();
+      if(scrimCost.classList.contains("open"))renderCostModal();
+    })
     .subscribe();
 }
 
@@ -1053,9 +1034,9 @@ async function initAuth(){
   const msg=document.getElementById("loginMsg");
   if(!sb){msg.textContent="Couldn't load the data library — check your connection.";loginScrim.classList.add("open");return;}
   const {data:{session}}=await sb.auth.getSession();
-  if(session){await fetchItems();subscribeItems();return;}
+  if(session){await fetchItems();await fetchExpenses();await loadTrip();renderAll();updateStatTotals();subscribeItems();return;}
   loginScrim.classList.add("open");
-  sb.auth.onAuthStateChange(async(ev,sess)=>{if(sess){loginScrim.classList.remove("open");await fetchItems();subscribeItems();}});
+  sb.auth.onAuthStateChange(async(ev,sess)=>{if(sess){loginScrim.classList.remove("open");await fetchItems();await fetchExpenses();await loadTrip();renderAll();updateStatTotals();subscribeItems();}});
 }
 let LOGIN_EMAIL=null;
 document.querySelectorAll(".who-btn").forEach(b=>b.onclick=async()=>{
@@ -1077,7 +1058,7 @@ document.getElementById("loginVerify").onclick=async()=>{
   if(error){msg.textContent="That code didn't work — try again or resend.";return;}
   msg.textContent="";
   loginScrim.classList.remove("open");
-  await fetchItems();subscribeItems();
+  await fetchItems();await fetchExpenses();await loadTrip();renderAll();updateStatTotals();subscribeItems();
 };
 
 /* ---- Assistant chat ---- */
@@ -1128,7 +1109,12 @@ async function sendChat(){
     if(!r.ok)throw new Error(out.error||("The assistant hit an error (HTTP "+r.status+")."));
     CHAT.push({role:"assistant",content:out.reply||""});
     chatBubble("bot",esc(out.reply||"Done."));
-    if(out.actions&&out.actions.length){await fetchItems();refreshOpenHubData();showSaved();}
+    if(out.actions&&out.actions.length){
+      await fetchItems();
+      if(out.actions.some(a=>a.tool==="set_hotel")){await loadTrip();renderAll();}
+      if(out.actions.some(a=>/expense/.test(a.tool))){await fetchExpenses();updateStatTotals();if(scrimCost.classList.contains("open"))renderCostModal();}
+      refreshOpenHubData();showSaved();
+    }
   }catch(err){
     typing.remove();
     chatBubble("bot",'<span style="color:#9d174d">'+esc(String(err&&err.message?err.message:err))+"</span>");
@@ -1141,11 +1127,6 @@ document.getElementById("chatInput").addEventListener("keydown",e=>{if(e.key==="
 chatBubble("bot","Hi! Send a screenshot or a Google Maps link (or just describe a place) and I'll add it to the trip — activities and restaurants, onto the right leg or day. I can also move or remove them. Anything else is for Alejandro to change.");
 
 /* ---- Boot ---- */
-document.getElementById("map").innerHTML=renderMap();
-renderRibbon();
-renderLegend();
-renderCalendar();
-renderAgenda();
 renderCostPanel();
 renderLinks();
 setView("dash");
