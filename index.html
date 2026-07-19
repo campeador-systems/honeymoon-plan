@@ -304,6 +304,8 @@
   .chat-pending{display:flex;gap:8px;padding:6px 12px 0;flex-wrap:wrap}
   .cp-thumb{position:relative}
   .cp-thumb img{height:44px;border-radius:6px;display:block}
+  .cp-pdf{display:inline-flex;align-items:center;height:44px;padding:0 10px;background:var(--chip);
+    border:1px solid var(--line);border-radius:6px;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-soft)}
   .cp-thumb button{position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;border:none;background:var(--ink);color:#fff;font-size:11px;line-height:1;cursor:pointer;padding:0}
   .chat-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);align-items:flex-end}
   .chat-row textarea{flex:1;min-width:0;resize:none;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:var(--sans);font-size:13px;background:#fffef9;color:var(--ink);max-height:110px}
@@ -372,8 +374,8 @@
   <div class="chat-log" id="chatLog"></div>
   <div class="chat-pending" id="chatPending"></div>
   <div class="chat-row">
-    <button class="chat-attach" id="chatAttach" title="Attach a screenshot">📎</button>
-    <input type="file" id="chatFile" accept="image/*" multiple style="display:none">
+    <button class="chat-attach" id="chatAttach" title="Attach a screenshot or PDF">📎</button>
+    <input type="file" id="chatFile" accept="image/*,application/pdf" multiple style="display:none">
     <textarea id="chatInput" rows="1" placeholder="Add a place… (paste screenshots here)"></textarea>
     <button class="pl-btn" id="chatSend">Send</button>
   </div>
@@ -1041,7 +1043,7 @@ function chatBubble(cls,html){
   return b;
 }
 function renderPending(){
-  document.getElementById("chatPending").innerHTML=PENDING.map((im,i)=>`<span class="cp-thumb"><img src="data:${im.media_type};base64,${im.data}"><button data-i="${i}" title="Remove">×</button></span>`).join("");
+  document.getElementById("chatPending").innerHTML=PENDING.map((im,i)=>`<span class="cp-thumb">${im.kind==="pdf"?`<span class="cp-pdf">📄 ${esc(im.name.slice(0,20))}</span>`:`<img src="data:${im.media_type};base64,${im.data}">`}<button data-i="${i}" title="Remove">×</button></span>`).join("");
   document.querySelectorAll("#chatPending button").forEach(b=>b.onclick=()=>{PENDING.splice(+b.dataset.i,1);renderPending();});
 }
 async function fileToImage(f){
@@ -1051,7 +1053,21 @@ async function fileToImage(f){
   cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
   return {type:"base64",media_type:"image/jpeg",data:cv.toDataURL("image/jpeg",0.85).split(",")[1]};
 }
-async function addChatFiles(files){for(const f of files){if(f&&f.type.startsWith("image/"))PENDING.push(await fileToImage(f));}renderPending();}
+async function fileToB64(f){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.readAsDataURL(f);});}
+async function addChatFiles(files){
+  const skipped=[];
+  for(const f of files){
+    if(!f)continue;
+    if(f.type.startsWith("image/")){const im=await fileToImage(f);PENDING.push({kind:"image",media_type:im.media_type,data:im.data});}
+    else if(f.type==="application/pdf"){
+      if(f.size>8*1024*1024){skipped.push((f.name||"PDF")+" — too big, 8MB max");continue;}
+      PENDING.push({kind:"pdf",name:f.name||"document.pdf",data:await fileToB64(f)});
+    }
+    else skipped.push(f.name||f.type||"that file");
+  }
+  renderPending();
+  if(skipped.length)chatBubble("bot","I can read images and PDFs — couldn't take: "+esc(skipped.join(", "))+".");
+}
 document.getElementById("chatAttach").onclick=()=>document.getElementById("chatFile").click();
 document.getElementById("chatFile").onchange=e=>{addChatFiles([...e.target.files]);e.target.value="";};
 document.getElementById("chatInput").addEventListener("paste",e=>{
@@ -1061,10 +1077,12 @@ document.getElementById("chatInput").addEventListener("paste",e=>{
 async function sendChat(){
   const inp=document.getElementById("chatInput"),text=inp.value.trim();
   if(!text&&!PENDING.length)return;
-  const imgs=PENDING.map(im=>({type:"image",source:im}));
-  const contentNow=[...imgs,...(text?[{type:"text",text:text}]:[])];
-  const contentStored=[...(imgs.length?[{type:"text",text:"[screenshot was attached here]"}]:[]),...(text?[{type:"text",text:text}]:[])];
-  chatBubble("me",(PENDING.length?`<div class="cb-imgs">${PENDING.map(im=>`<img src="data:${im.media_type};base64,${im.data}">`).join("")}</div>`:"")+(text?esc(text):""));
+  const blocks=PENDING.map(im=>im.kind==="pdf"
+    ?{type:"document",source:{type:"base64",media_type:"application/pdf",data:im.data}}
+    :{type:"image",source:{type:"base64",media_type:im.media_type,data:im.data}});
+  const contentNow=[...blocks,...(text?[{type:"text",text:text}]:[])];
+  const contentStored=[...(blocks.length?[{type:"text",text:"[attachment was here]"}]:[]),...(text?[{type:"text",text:text}]:[])];
+  chatBubble("me",(PENDING.length?`<div class="cb-imgs">${PENDING.map(im=>im.kind==="pdf"?`<span class="cp-pdf">📄 ${esc(im.name.slice(0,20))}</span>`:`<img src="data:${im.media_type};base64,${im.data}">`).join("")}</div>`:"")+(text?esc(text):""));
   const outgoing=[...CHAT.slice(-8),{role:"user",content:contentNow}];
   CHAT.push({role:"user",content:contentStored});
   PENDING=[];renderPending();inp.value="";
