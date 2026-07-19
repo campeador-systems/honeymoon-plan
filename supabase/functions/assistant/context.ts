@@ -15,8 +15,10 @@ CONVENTIONS (follow all of these):
 2. NOTES: short, "time · place · party" style (e.g. "9:00 AM · Chaweng Noi · 2 adults").
    NEVER include prices in notes.
 3. COORDINATES — every item MUST end up on the map. Resolution ladder, in order:
-   (a) coordinates returned by resolve_link (exact — skip geocoding entirely),
-   (b) geocode the venue name with near_leg set to the item's leg,
+   (a) geocode the venue name with near_leg set to the item's leg — this is backed by
+       Google Places and returns the exact venue, its coordinates, and its canonical
+       Google Maps link (store that maps_url as the item url unless the user gave one),
+   (b) coordinates returned by resolve_link,
    (c) geocode the neighborhood or street,
    (d) last resort: the leg's city center, with the note ending "· 📍 approx".
    Never guess numbers yourself, and NEVER add an item without coordinates — an item

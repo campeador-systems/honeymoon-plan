@@ -302,13 +302,43 @@ async function runTool(name: string, input: any, db: any, trip: Trip) {
         return { ok: true };
       }
       case "geocode": {
+        const pkey = Deno.env.get("PLACES_API_KEY");
+        const bias = input.near_leg ? trip.legCenters[String(input.near_leg)] : null;
+        if (pkey) {
+          try {
+            const body: Record<string, unknown> = { textQuery: String(input.query), maxResultCount: 3 };
+            if (bias) body.locationBias = { circle: { center: { latitude: bias[0], longitude: bias[1] }, radius: 30000 } };
+            const pr = await fetch("https://places.googleapis.com/v1/places:searchText", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json", "X-Goog-Api-Key": pkey,
+                "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location,places.googleMapsUri,places.websiteUri",
+              },
+              body: JSON.stringify(body),
+            });
+            if (pr.ok) {
+              // deno-lint-ignore no-explicit-any
+              const pj: any = await pr.json();
+              // deno-lint-ignore no-explicit-any
+              const places = (pj.places ?? []).map((x: any) => ({
+                name: x.displayName?.text, address: x.formattedAddress,
+                lat: x.location?.latitude, lng: x.location?.longitude,
+                maps_url: x.googleMapsUri, website: x.websiteUri,
+              }));
+              if (places.length) {
+                return { ok: true, source: "google_places", results: places,
+                  note: "Exact venue data. Store maps_url as the item url unless the user provided their own link." };
+              }
+            }
+          } catch (_e) { /* fall through to OSM */ }
+        }
         const q = async (params: string) => {
           const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=3&${params}`,
             { headers: { "User-Agent": "honeymoon-planner (personal trip app)" } });
           return await r.json();
         };
         let results = [];
-        const c = input.near_leg ? trip.legCenters[String(input.near_leg)] : null;
+        const c = bias;
         if (c) {
           const d = 0.35;
           results = await q(`q=${encodeURIComponent(input.query)}&viewbox=${c[1]-d},${c[0]+d},${c[1]+d},${c[0]-d}&bounded=1`);
