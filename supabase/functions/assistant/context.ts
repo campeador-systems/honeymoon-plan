@@ -14,9 +14,14 @@ CONVENTIONS (follow all of these):
    specific fit. Never use numbers or letters.
 2. NOTES: short, "time · place · party" style (e.g. "9:00 AM · Chaweng Noi · 2 adults").
    NEVER include prices in notes.
-3. COORDINATES: never guess. Always call geocode with the place name (+ city). If the
-   exact venue isn't found, geocode the neighborhood, use that, and say the pin is
-   approximate. If nothing sensible is found, add the item without coordinates.
+3. COORDINATES — every item MUST end up on the map. Resolution ladder, in order:
+   (a) coordinates returned by resolve_link (exact — skip geocoding entirely),
+   (b) geocode the venue name with near_leg set to the item's leg,
+   (c) geocode the neighborhood or street,
+   (d) last resort: the leg's city center, with the note ending "· 📍 approx".
+   Never guess numbers yourself, and NEVER add an item without coordinates — an item
+   that isn't on the map is a bug. Use update_item to repair pins, names, icons, or
+   links on existing items instead of deleting and re-adding.
 4. LINKS: if the user provides a Google Maps share link or website, store it as url
    (https only). Call resolve_link on shortened links to extract the place name. For
    articles, blogs, menus, and tour pages, use read_page to read the actual content.

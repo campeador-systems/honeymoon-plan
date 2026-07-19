@@ -19,6 +19,7 @@ type Trip = {
   id: string; name: string; startDate: string; endDate: string;
   legKeys: string[]; legDays: Record<string, [number, number]>;
   legNames: Record<string, string>;
+  legCenters: Record<string, [number, number]>;
   summary: string;
 };
 let TRIP_CACHE: { at: number; trip: Trip } | null = null;
@@ -53,9 +54,10 @@ async function loadTrip(db: any): Promise<Trip> {
     `Valid legs for items: ${stayLegs.map((l: { key: string }) => l.key).join(", ")}.`,
   ];
   const legNames = Object.fromEntries(stayLegs.map((l: { key: string; label: string }) => [l.key, l.label.split(",")[0]]));
+  const legCenters = Object.fromEntries(stayLegs.map((l: { key: string; center_lat: number; center_lng: number }) => [l.key, [l.center_lat, l.center_lng]]));
   const t: Trip = {
     id: trip.id, name: trip.name, startDate: trip.start_date, endDate: trip.end_date,
-    legKeys: stayLegs.map((l: { key: string }) => l.key), legDays, legNames, summary: lines.join("\n"),
+    legKeys: stayLegs.map((l: { key: string }) => l.key), legDays, legNames, legCenters, summary: lines.join("\n"),
   };
   TRIP_CACHE = { at: Date.now(), trip: t };
   return t;
@@ -90,6 +92,19 @@ const TOOLS = [
     name: "move_item",
     description: "Move an existing item to a different day (or null to unschedule).",
     input_schema: { type: "object", properties: { id: { type: "string" }, day: { type: ["integer", "null"] } }, required: ["id"] },
+  },
+  {
+    name: "update_item",
+    description: "Update fields of an existing item (fix its map pin coordinates, rename it, change its icon, note, or link).",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        name: { type: "string" }, note: { type: "string" }, ico: { type: "string" },
+        lat: { type: "number" }, lng: { type: "number" }, url: { type: "string" },
+      },
+      required: ["id"],
+    },
   },
   {
     name: "delete_item",
@@ -151,8 +166,8 @@ const TOOLS = [
   },
   {
     name: "geocode",
-    description: "Look up coordinates for a place name via OpenStreetMap. Include the city, e.g. 'Ichiran Shibuya Tokyo'.",
-    input_schema: { type: "object", properties: { query: { type: "string" } }, required: ["query"] },
+    description: "Look up coordinates for a place name via OpenStreetMap. Include the city in the query, and set near_leg to the item's leg to bias results to that city.",
+    input_schema: { type: "object", properties: { query: { type: "string" }, near_leg: { type: "string" } }, required: ["query"] },
   },
   {
     name: "read_page",
@@ -219,6 +234,16 @@ async function runTool(name: string, input: any, db: any, trip: Trip) {
         if (error) throw error;
         return { ok: true };
       }
+      case "update_item": {
+        const patch: Record<string, unknown> = {};
+        for (const k of ["name", "note", "ico", "lat", "lng", "url"]) if (input[k] !== undefined) patch[k] = input[k];
+        if (patch.url != null && !String(patch.url).startsWith("https://")) throw new Error("url must be https");
+        if (patch.ico != null && (/[a-zA-Z0-9]/.test(String(patch.ico)) || String(patch.ico).length > 8)) throw new Error("ico must be a single emoji");
+        if (patch.note != null && /[$€£¥฿]|\bTHB\b|\bUSD\b|\bJPY\b/i.test(String(patch.note))) throw new Error("no prices in notes");
+        const { error } = await db.from("items").update(patch).eq("id", input.id);
+        if (error) throw error;
+        return { ok: true };
+      }
       case "delete_item": {
         const { error } = await db.from("items").delete().eq("id", input.id);
         if (error) throw error;
@@ -277,11 +302,18 @@ async function runTool(name: string, input: any, db: any, trip: Trip) {
         return { ok: true };
       }
       case "geocode": {
-        const r = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&limit=3&q=${encodeURIComponent(input.query)}`,
-          { headers: { "User-Agent": "honeymoon-planner (personal trip app)" } },
-        );
-        const results = await r.json();
+        const q = async (params: string) => {
+          const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=3&${params}`,
+            { headers: { "User-Agent": "honeymoon-planner (personal trip app)" } });
+          return await r.json();
+        };
+        let results = [];
+        const c = input.near_leg ? trip.legCenters[String(input.near_leg)] : null;
+        if (c) {
+          const d = 0.35;
+          results = await q(`q=${encodeURIComponent(input.query)}&viewbox=${c[1]-d},${c[0]+d},${c[1]+d},${c[0]-d}&bounded=1`);
+        }
+        if (!results.length) results = await q(`q=${encodeURIComponent(input.query)}`);
         return {
           ok: true,
           results: results.map((x: { display_name: string; lat: string; lon: string }) => ({
@@ -324,8 +356,16 @@ async function runTool(name: string, input: any, db: any, trip: Trip) {
           x ? decodeURIComponent(String(x).replace(/\+/g, " ")).trim() : null;
         const hint = clean(mapsPlace) ?? clean(q) ?? clean(og) ?? clean(title);
         const useless = !hint || /^google/i.test(hint) || hint.length < 3;
+        let lat: number | null = null, lng: number | null = null;
+        const pin = finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) ?? html.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+        const at = finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+        const meta = html.match(/center=(-?\d+\.\d+)(?:%2C|,)(-?\d+\.\d+)/i);
+        const m2 = pin ?? at ?? meta;
+        if (m2) { lat = Number(m2[1]); lng = Number(m2[2]); }
         return {
           ok: true, final_url: finalUrl, place_hint: useless ? null : hint,
+          lat, lng,
+          coord_note: lat != null ? "Exact coordinates extracted from the link — use these, no geocode needed." : undefined,
           warning: useless ? "Could not extract a place name from this link — ask the user what the place is called. Do NOT guess." : undefined,
         };
       }
