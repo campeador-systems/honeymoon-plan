@@ -18,6 +18,7 @@ const json = (body: unknown, status = 200) =>
 type Trip = {
   id: string; name: string; startDate: string; endDate: string;
   legKeys: string[]; legDays: Record<string, [number, number]>;
+  legNames: Record<string, string>;
   summary: string;
 };
 let TRIP_CACHE: { at: number; trip: Trip } | null = null;
@@ -51,9 +52,10 @@ async function loadTrip(db: any): Promise<Trip> {
       `- travel day ${d.date}: ${d.city} (${d.move.brand}).`),
     `Valid legs for items: ${stayLegs.map((l: { key: string }) => l.key).join(", ")}.`,
   ];
+  const legNames = Object.fromEntries(stayLegs.map((l: { key: string; label: string }) => [l.key, l.label.split(",")[0]]));
   const t: Trip = {
     id: trip.id, name: trip.name, startDate: trip.start_date, endDate: trip.end_date,
-    legKeys: stayLegs.map((l: { key: string }) => l.key), legDays, summary: lines.join("\n"),
+    legKeys: stayLegs.map((l: { key: string }) => l.key), legDays, legNames, summary: lines.join("\n"),
   };
   TRIP_CACHE = { at: Date.now(), trip: t };
   return t;
@@ -194,6 +196,10 @@ async function runTool(name: string, input: any, db: any, trip: Trip) {
     switch (name) {
       case "add_item": {
         const row = validateItem(trip, input);
+        if (!row.url) {
+          row.url = "https://www.google.com/maps/search/?api=1&query=" +
+            encodeURIComponent(`${row.name} ${trip.legNames[String(row.leg)] ?? ""}`.trim());
+        }
         const { data, error } = await db.from("items").insert(row).select().single();
         if (error) throw error;
         return { ok: true, id: data.id };
@@ -230,7 +236,9 @@ async function runTool(name: string, input: any, db: any, trip: Trip) {
         const row = {
           trip_id: trip.id, leg_key: input.leg, name: String(input.name).slice(0, 120),
           lat: input.lat ?? existing?.lat ?? null, lng: input.lng ?? existing?.lng ?? null,
-          url: url ?? existing?.url ?? null,
+          url: url ?? existing?.url ??
+            ("https://www.google.com/maps/search/?api=1&query=" +
+             encodeURIComponent(`${String(input.name)} ${trip.legNames[String(input.leg)] ?? ""}`.trim())),
         };
         const { error } = await db.from("hotels").upsert(row, { onConflict: "trip_id,leg_key" });
         if (error) throw error;
