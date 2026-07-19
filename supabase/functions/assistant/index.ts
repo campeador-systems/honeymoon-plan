@@ -110,6 +110,44 @@ const TOOLS = [
     },
   },
   {
+    name: "add_expense",
+    description: "Record a cost in the trip expense tracker. Use ONLY when evidence (booking confirmation, receipt, screenshot, or the user's words) shows an actual amount.",
+    input_schema: {
+      type: "object",
+      properties: {
+        desc: { type: "string", description: "e.g. 'InterContinental Hong Kong — 1 night'" },
+        cat: { type: "string", enum: ["Flights", "Lodging", "Activities", "Food", "Transport", "Other"] },
+        cash: { type: ["number", "null"], description: "Total USD for both travelers" },
+        points: { type: ["number", "null"] },
+        prog: { type: ["string", "null"], description: "Points program, e.g. 'Chase UR'" },
+      },
+      required: ["desc", "cat"],
+    },
+  },
+  {
+    name: "list_expenses",
+    description: "List expense rows (id, desc, cat, cash, points) — to check for duplicates or find one to update/delete.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "update_expense",
+    description: "Update fields of an existing expense row (e.g. when a booking is replaced or a price changes).",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        desc: { type: "string" }, cat: { type: "string" },
+        cash: { type: "number" }, points: { type: "number" }, prog: { type: "string" },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "delete_expense",
+    description: "Delete an expense row. Only when the user explicitly asked for that specific expense.",
+    input_schema: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
+  },
+  {
     name: "geocode",
     description: "Look up coordinates for a place name via OpenStreetMap. Include the city, e.g. 'Ichiran Shibuya Tokyo'.",
     input_schema: { type: "object", properties: { query: { type: "string" } }, required: ["query"] },
@@ -190,6 +228,37 @@ async function runTool(name: string, input: any, db: any, trip: Trip) {
         TRIP_CACHE = null; // hotel names feed the trip summary
         return { ok: true };
       }
+      case "add_expense": {
+        const cats = ["Flights", "Lodging", "Activities", "Food", "Transport", "Other"];
+        if (!cats.includes(String(input.cat))) throw new Error(`cat must be one of ${cats.join(", ")}`);
+        const cash = Number(input.cash ?? 0), points = Number(input.points ?? 0);
+        if (!(cash >= 0) || !(points >= 0)) throw new Error("cash/points must be >= 0");
+        const { data, error } = await db.from("expenses").insert({
+          trip_id: trip.id, desc: String(input.desc).slice(0, 160), cat: input.cat,
+          cash, points, prog: String(input.prog ?? ""),
+        }).select().single();
+        if (error) throw error;
+        return { ok: true, id: data.id };
+      }
+      case "list_expenses": {
+        const { data, error } = await db.from("expenses").select("id,desc,cat,cash,points,prog").eq("trip_id", trip.id).order("created_at");
+        if (error) throw error;
+        return { ok: true, expenses: data };
+      }
+      case "update_expense": {
+        const patch: Record<string, unknown> = {};
+        for (const k of ["desc", "cat", "cash", "points", "prog"]) if (input[k] !== undefined) patch[k] = input[k];
+        if (patch.cash !== undefined && !(Number(patch.cash) >= 0)) throw new Error("cash must be >= 0");
+        if (patch.points !== undefined && !(Number(patch.points) >= 0)) throw new Error("points must be >= 0");
+        const { error } = await db.from("expenses").update(patch).eq("id", input.id);
+        if (error) throw error;
+        return { ok: true };
+      }
+      case "delete_expense": {
+        const { error } = await db.from("expenses").delete().eq("id", input.id);
+        if (error) throw error;
+        return { ok: true };
+      }
       case "geocode": {
         const r = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&limit=3&q=${encodeURIComponent(input.query)}`,
@@ -268,7 +337,7 @@ Deno.serve(async (req) => {
       const results = [];
       for (const block of toolUses) {
         const out = await runTool(block.name, block.input, db, trip);
-        if (out.ok && ["add_item", "move_item", "delete_item", "set_hotel"].includes(block.name)) {
+        if (out.ok && ["add_item", "move_item", "delete_item", "set_hotel", "add_expense", "update_expense", "delete_expense"].includes(block.name)) {
           actions.push({ tool: block.name, input: block.input });
         }
         results.push({ type: "tool_result", tool_use_id: block.id, content: JSON.stringify(out) });

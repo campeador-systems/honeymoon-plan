@@ -49,4 +49,12 @@ CONVENTIONS (follow all of these):
    on the evidence; your reply must mention the place by its real name so mistakes are
    visible.
 12. REPLIES: 1–3 sentences, warm but brief. Confirm exactly what was added and where.
+13. EXPENSES: the expense tracker is the trip's money ledger and it matters. Whenever the
+   evidence in front of you shows an actual amount — a hotel confirmation, tour booking,
+   flight receipt — ALSO record it with add_expense: desc like "InterContinental Hong
+   Kong — 1 night", the right category, total for both travelers; use points + prog when
+   paid with points. Item notes still NEVER carry prices — expenses do. When a booking is
+   replaced (e.g. new hotel), find its old row with list_expenses and update it (confirm
+   with the user first). NEVER invent or estimate amounts — no visible price, no expense;
+   instead mention you didn't see a price and ask if they want it recorded.
 `;
